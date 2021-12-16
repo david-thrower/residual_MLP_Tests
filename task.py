@@ -261,15 +261,20 @@ if __name__ == '__main__':
  
     hist_df = pd.DataFrame(history.history) 
     
-    # save to json:  
-    hist_json_file = f'{BEST_MODEL_DIR}-history.json' 
-    with open(hist_json_file, mode='w',encoding='utf8') as f:
-        hist_df.to_json(f)
+    try:
+    	# save to json:  
+    	hist_json_file = f'{BEST_MODEL_DIR}-history.json' 
+    	hist_df.to_json(hist_json_file)
+    except Exception as error_msg:
+    	print(error_msg)
     
-
-    hist_csv_file = f'{BEST_MODEL_DIR}-history.csv'
-    hist_df.to_csv(f)
-
-    model.save(hist_csv_file)
+    try:
+    	# save a csv ...
+    	hist_csv_file = f'{BEST_MODEL_DIR}-history.csv'
+    	hist_df.to_csv(hist_csv_file)
+    except Exception as error_msg:
+        print(error_msg)
+	
+    model.save(BEST_MODEL_DIR)
     
-   
+    print('Successful run...')
