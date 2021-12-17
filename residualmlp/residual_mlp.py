@@ -32,23 +32,48 @@ def make_model(learning_rate = .0007,
     precision = tf.keras.metrics.Precision(), 
     recall = tf.keras.metrics.Recall()
     accuracy = tf.keras.metrics.Accuracy()
-    metrics = [precision,recall,accuracy]
-            # use number_of_classes = 1 for a regression problem
-    inp = tf.keras.layers.Input(shape = input_shape) # Start with input layer that fits 
-                                                 # fucntional API will blow up if
-                                                 # there is not an input layer 
-                                                 # that coerces a specific size ...
-                                                 # quite annoying if you ask me, but
-                                                 # obviously Google didn't so here 
-                                                 # we are ...
+    top_5 = tf.keras.metrics.TopKCategoricalAccuracy(k=5, 
+    						     name='top_5_categorical_accuracy', 
+    						     dtype=None)
+    top_4 = tf.keras.metrics.TopKCategoricalAccuracy(k=4, 
+                                                     name='top_4_categorical_accuracy', 
+                                                     dtype=None)
+    top_3 = tf.keras.metrics.TopKCategoricalAccuracy(k=3, 
+                                                     name='top_3_categorical_accuracy', 
+                                                     dtype=None)
+    top_2 = tf.keras.metrics.TopKCategoricalAccuracy(k=2, 
+    						     name='top_2_categorical_accuracy', 
+    						     dtype=None)
+    top_1 = tf.keras.metrics.TopKCategoricalAccuracy(k=1, 
+    						     name='top_1_categorical_accuracy', 
+    						     dtype=None)    
+    metrics = [precision,
+    	       recall,
+    	       accuracy,
+    	       top_5,
+    	       top_4,
+    	       top_3,
+    	       top_2,
+    	       top_1]
+    # Use number_of_classes = 1 for a regression problem still. I paln to apply
+    # automation to parameterize and selectively include all commonly used the metrics
+    # that are valid for the problem type and number of classes ... 
+    inp = tf.keras.layers.Input(shape = input_shape) 
+    # Start with input layer that fits. 
+    # The keras fucntional API will blow up appearently if
+    # there is not an explicit input layer 
+    # that coerces inputs as a specific size
+    # quite annoying if you ask me, but
+    # obviously Google didn't, so here 
+    # we are ...
     if bw_images:
-        x = grayscale_to_rgb(inp) # In (28,28) out (None,224, 224, 3)
+        x = grayscale_to_rgb(inp)
     else:
         x = inp
     if base_model != '':
         x = tf.keras.layers.Resizing(base_model_input_shape[0],
                                      base_model_input_shape[1])(x)
-        x = base_model(x)         # In (None,224, 224, 3) out (None, 2048)  (Flattened)
+        x = base_model(x)
     if flatten_after_base_model:
         tf.keras.layers.Flatten()(x)
     initializer = tf.keras.initializers.GlorotNormal()

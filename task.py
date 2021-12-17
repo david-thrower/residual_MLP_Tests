@@ -200,7 +200,8 @@ if __name__ == '__main__':
         for layer in mod_with_fc_raw.layers:
             layer.trainable = False
         # Last conv2d layer. This we want to train .
-        mod_with_fc_raw.layers[-6].trainable = True
+        # Remember to un-comment this unless tonight's model outperforms
+        # mod_with_fc_raw.layers[-6].trainable = True
 
     
         efficient_net_b_7_transferable_base_model =\
