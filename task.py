@@ -120,8 +120,8 @@ if __name__ == '__main__':
     #BEST_MODEL_DIR = 'small-test-best-model'
     #EPOCHS = 1000
     #PATIENCE = 7
-    BLOCKS_SELECTION = 5
-    FINAL_DENSE_LAYERS_SELECTION = 7
+    BLOCKS_SELECTION = 6
+    FINAL_DENSE_LAYERS_SELECTION = 8
     
     BATCH_SIZE = 50 #[5,10,20,50]
     BLOCKS = []
@@ -132,7 +132,8 @@ if __name__ == '__main__':
     BLOCKS.append([[6,200,25]])
     BLOCKS.append([[5,150,10],[5,75,10],[5,75,10],
                    [5,75,10],[5,75,10],[5,75,10]])
-    
+    BLOCKS.append([[5,150,10],[5,125,10],[5,100,10],
+                   [5,75,10],[5,75,10],[5,75,10],[5,50,6],[5,50,6]])
     
     
     B_NORM_OR_DROPOUT_LAST_LAYERS = ['dropout','bnorm']
@@ -148,6 +149,7 @@ if __name__ == '__main__':
     FINAL_DENSE_LAYERS_PERMUTATIONS.append([25,25,25])
     FINAL_DENSE_LAYERS_PERMUTATIONS.append([75,25,25])
     FINAL_DENSE_LAYERS_PERMUTATIONS.append([100,35,20])
+    FINAL_DENSE_LAYERS_PERMUTATIONS.append([100,60,35,20])
     
     # hard coded variables
     HEIGHT = 32
