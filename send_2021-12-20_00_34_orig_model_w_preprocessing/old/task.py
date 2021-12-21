@@ -231,20 +231,7 @@ if __name__ == '__main__':
 
         final_base_model =\
             tf.keras.Model(inputs = inp,outputs = x)
-        
-        model=\
-            make_model(learning_rate=LEARNING_RATE,
-                       input_shape = INPUT_SHAPE,  
-                       base_model= final_base_model,
-                       base_model_input_shape = BASE_MODEL_INPUT_SHAPE,
-                       flatten_after_base_model = True,
-                       blocks = BLOCKS[BLOCKS_SELECTION],
-                       b_norm_or_dropout_last_layers = 'bnorm',
-                       dropout_rate=.2,
-                       final_dense_layers =\
-                       FINAL_DENSE_LAYERS_PERMUTATIONS[
-                            FINAL_DENSE_LAYERS_SELECTION]
-            )
+    
     
     
             
