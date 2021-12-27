@@ -1,5 +1,11 @@
-import pendulum
 import subprocess
+preliminary_install_commands = ["pip3 install --upgrade pip",
+                                "pip3 install pendulum"]
+for cmd in preliminary_install_commands:
+    subprocess.run(cmd,
+                   shell=True,
+                   check=True)
+import pendulum
 
 if __name__ == '__main__':
     time_stamp = pendulum.now().\
@@ -76,6 +82,3 @@ if __name__ == '__main__':
     subprocess.run(command,
                    shell=True,
                    check=True)
-
-
-

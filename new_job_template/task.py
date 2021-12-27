@@ -163,6 +163,7 @@ if __name__ == '__main__':
                    [5,75,10],[5,75,10],[5,75,10]])
     BLOCKS.append([[5,100,10],[7,75,8],[5,75,10]])
     BLOCKS.append([[5,100,10],[7,75,8],[5,75,10],[5,75,10]])
+    BLOCKS.append([[5,100,10],[7,75,8],[4,75,10]])
     
     B_NORM_OR_DROPOUT_LAST_LAYERS = hparams['b_norm_or_dropout_last_layers']
     DROPOUT_RATE = hparams['dropout_rate']
