@@ -29,6 +29,19 @@ if __name__ == '__main__':
         default=2
     )
     parser.add_argument(
+        "--residual_bypass_dense_layers",
+        type=str,
+        help =\
+            "A string representation of a 2d array. Each ith 1d array "
+            + "in this 2d array will be a list of integers. For each "
+            + "integer n, there will be a Dense inserted in the residual "
+            + "bypass for the ith block. If you leave this default, it will "
+            + "be an empty list and will add no layers. This is very "
+            + "challenging to articulate andis advisable to refer to our "
+            + "tutorials or documentation. Note the order, tutorials first.",
+        default=''
+    )        
+    parser.add_argument(
        "--final_layers",
        type=int,
        help = "Which final layers architecture option to try?",
@@ -164,6 +177,22 @@ if __name__ == '__main__':
     BLOCKS.append([[5,100,10],[7,75,8],[5,75,10]])
     BLOCKS.append([[5,100,10],[7,75,8],[5,75,10],[5,75,10]])
     BLOCKS.append([[5,100,10],[7,75,8],[4,75,10]])
+    if hparams['residual_bypass_dense_layers'] == "":
+        RESIDUAL_BYPASS_DENSE_LAYERS = list()
+    else:
+        RESIDUAL_BYPASS_DENSE_LAYERS =\
+            eval(hparams['residual_bypass_dense_layers'])
+        if not isinstance(RESIDUAL_BYPASS_DENSE_LAYERS,list):
+            raise ValueError("The parameter residual_bypass_dense_layers "
+                             "should be the string representation of either: "
+                             "1. A 2d list, one 1d list of integers for each "
+                             "ith block in blocks. For each jth item n in "
+                             "each ith 1d list, a dense layer with n "
+                             "neurons will be inserted in the residual bypass"
+                             " for the ith block. Please refer to the "
+                             "tutorials. OR the parameter "
+                             "residual_bypass_dense_layers may be an empty "
+                             "list.")
     
     B_NORM_OR_DROPOUT_LAST_LAYERS = hparams['b_norm_or_dropout_last_layers']
     DROPOUT_RATE = hparams['dropout_rate']
@@ -249,6 +278,7 @@ if __name__ == '__main__':
                         base_model_input_shape = BASE_MODEL_INPUT_SHAPE,
                         flatten_after_base_model = FLATTEN,
                         blocks = BLOCKS[BLOCKS_SELECTION],
+                        residual_bypass_dense_layers = RESIDUAL_BYPASS_DENSE_LAYERS,
                         b_norm_or_dropout_last_layers=B_NORM_OR_DROPOUT_LAST_LAYERS,
                         dropout_rate=DROPOUT_RATE,
                         final_dense_layers =\

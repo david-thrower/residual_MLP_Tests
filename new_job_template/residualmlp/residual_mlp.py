@@ -21,6 +21,7 @@ def make_model(learning_rate = .0007,
                base_model_input_shape = (600,600,3),
                flatten_after_base_model = True,
                blocks = [[5,400,50]], # 2D ARRAY: Each row: [number_of_layers,first_layer_neurons, decay_coefficient]
+               residual_bypass_dense_layers = list(),
                b_norm_or_dropout_last_layers = 'dropout', # alternative 'bnorm'
                dropout_rate = .2,
                activation = tf.keras.activations.relu,
@@ -28,6 +29,41 @@ def make_model(learning_rate = .0007,
                number_of_classes = 10, # 1 if a regression problem
                final_activation = tf.keras.activations.softmax,
                loss = tf.keras.losses.CategoricalCrossentropy(from_logits=False)):
+    # Screen for nonsense combinations of the parameters 'blocks' and 
+    # 'residual_bypass_dense_layers'
+    if not isinstance(residual_bypass_dense_layers,list):
+        raise ValueError("The parameter residual_bypass_dense_layers should "
+                         "be one of these 2: 1. a 2d list, one 1d list of "
+                         "integers for each list in blocks, or 2. an empty "
+                         "list.")
+    if len(residual_bypass_dense_layers) != 0:
+        if len(blocks) != len(residual_bypass_dense_layers):
+            raise ValueError("The parameter 'blocks' and "
+                             "'residual_bypass_dense_layers are 2d arrays' "
+                             "must have the same number of 1d arrays "
+                             "nested within them OR be aan empty list or "
+                             "left default. To fix this error do one "
+                             "of the following: Fix 1: Make them the same "
+                             "number of 1d arrays, for example "
+                             "blocks = [[5,20,2],[5,20,2],[5,20,2]] ..."
+                             " (3 nested 1d arrays) "
+                             "residual_bypass_dense_layers = "
+                             "[[10,7],[],[10]] also 3. "
+                             "the ith array nested in "
+                             "residual_bypass_dense_layers will be "
+                             "associated with the i_th block in blocks. "
+                             " each j_th item in the i_th nested 1d array "
+                             "will make one dense layer in the tensor that "
+                             "bypasses the main block of dense layers in the "
+                             "ith block in the residual MLP. This is "
+                             "probably a bit confusing to read. Please "
+                             "refer to the tutorials and documentation. Note "
+                             "the order I referred to the tutorials and "
+                             "documentation in. Fix 2: leave "
+                             "residual_bypass_dense_layers default / set it "
+                             "to an empty list.")
+    else:
+        residual_bypass_dense_layers = [[] for block in blocks]
     
     precision = tf.keras.metrics.Precision(), 
     recall = tf.keras.metrics.Recall()
@@ -77,18 +113,23 @@ def make_model(learning_rate = .0007,
     if flatten_after_base_model:
         tf.keras.layers.Flatten()(x)
     initializer = tf.keras.initializers.GlorotNormal()
-    for block in blocks:
+    for block, bypass_block in zip(blocks,residual_bypass_dense_layers):
         x = tf.keras.layers.Dense(block[1],
                                   activation,
                                   kernel_initializer=initializer)(x) 
         x = tf.keras.layers.BatchNormalization()(x) 
         # x proceeds sequentially to the 
         # next Dense layer.
-        y = tf.keras.layers.BatchNormalization()(x) 
+        y = tf.keras.layers.BatchNormalization()(x)
+        for bypass_layer in bypass_block:
+            y = tf.keras.layers.Dense(bypass_layer,
+                                      activation,
+                                      kernel_initializer=initializer)(y)
+            y = tf.keras.layers.BatchNormalization()(y)
         # y does NOT proceed sequentially
         # to the next layer. This bupasses 
         # several layers and give a memory 
-        # that atenuates some of the 
+        # that attenuates some of the 
         # deleterious effects of a deeper 
         # network and lets us capture more 
         # complex interactions before 

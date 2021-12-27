@@ -20,6 +20,7 @@ if __name__ == '__main__':
                 'project_name':"tandem-EfficientNetB7-ResidualMLP",
                 'flatten':'True',
                 'blocks':6,
+                'RESIDUAL_BYPASS_DENSE_LAYERS':'',
                 'final_layers':8,
                 'b_norm_or_dropout_last_layers':'dropout',
                 'dropout_rate':'0.25',
