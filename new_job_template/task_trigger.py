@@ -20,7 +20,9 @@ if __name__ == '__main__':
                 'project_name':"tandem-EfficientNetB7-ResidualMLP",
                 'flatten':'True',
                 'blocks':6,
-                'RESIDUAL_BYPASS_DENSE_LAYERS':'',
+                'residual_bypass_dense_layers':'',
+                'b_norm_or_dropout_residual_bypass_layers':'dropout',
+                'dropout_rate_for_bypass_layers':.25,
                 'final_layers':8,
                 'b_norm_or_dropout_last_layers':'dropout',
                 'dropout_rate':'0.25',
@@ -63,6 +65,9 @@ if __name__ == '__main__':
                        --best_model_dir {BEST_MODEL_DIR}{back_slash}
                        --flatten {hparams['flatten']}{back_slash}
                        --blocks {hparams['blocks']}{back_slash}
+                       --residual_bypass_dense_layers {hparams['residual_bypass_dense_layers']}{back_slash}
+                       --b_norm_or_dropout_residual_bypass_layers {hparams['b_norm_or_dropout_residual_bypass_layers']}{back_slash}
+                       --dropout_rate_for_bypass_layers {hparams['dropout_rate_for_bypass_layers']}{back_slash}
                        --final_layers {hparams['final_layers']}{back_slash}
                        --b_norm_or_dropout_last_layers {hparams['b_norm_or_dropout_last_layers']}{back_slash}
                        --dropout_rate {hparams['dropout_rate']}{back_slash}

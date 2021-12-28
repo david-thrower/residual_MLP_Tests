@@ -115,6 +115,20 @@ if __name__ == '__main__':
         help = "Learning_rate...",
         default = .0007
     )
+    parser.add_argument(
+        "--b_norm_or_dropout_residual_bypass_layers",
+        type=str,
+        help = "For the residual bypass layers, batch normalize or dropout after layer?",
+        default = 'dropout'
+    )
+    parser.add_argument(
+        "--dropout_rate_for_bypass_layers",
+        type=float,
+        help = "For the residual bypass layers, dropout rate?",
+        default = 0.25
+    )
+    
+    
 
     # parser.add_argument(
     #     "--learning_rate_decay_factor",
@@ -177,6 +191,7 @@ if __name__ == '__main__':
     BLOCKS.append([[5,100,10],[7,75,8],[5,75,10]])
     BLOCKS.append([[5,100,10],[7,75,8],[5,75,10],[5,75,10]])
     BLOCKS.append([[5,100,10],[7,75,8],[4,75,10]])
+    
     if hparams['residual_bypass_dense_layers'] == "":
         RESIDUAL_BYPASS_DENSE_LAYERS = list()
     else:
@@ -193,6 +208,9 @@ if __name__ == '__main__':
                              "tutorials. OR the parameter "
                              "residual_bypass_dense_layers may be an empty "
                              "list.")
+    B_NORM_OR_DROPOUT_RESIDUAL_BYPASS_LAYERS =\
+        hparams['b_norm_or_dropout_residual_bypass_layers']
+    DROPOUT_RATE_FOR_BYPASS_LAYERS = hparams['dropout_rate_for_bypass_layers']
     
     B_NORM_OR_DROPOUT_LAST_LAYERS = hparams['b_norm_or_dropout_last_layers']
     DROPOUT_RATE = hparams['dropout_rate']
@@ -246,7 +264,7 @@ if __name__ == '__main__':
     selected_y_train_ohe = y_train_ohe.numpy()[selected_indexes,:]
     
     # It looks weird that we are using a base model with 1000 classes.
-    # To pull the model that is pre-trained onn imagenet, we have to do this
+    # To pull the model that is pre-trained on imagenet, we have to do this
     # or we get a model with uninitilized weights. Not recommended for
     # transfer learning...
     with strategy.scope():
@@ -279,6 +297,8 @@ if __name__ == '__main__':
                         flatten_after_base_model = FLATTEN,
                         blocks = BLOCKS[BLOCKS_SELECTION],
                         residual_bypass_dense_layers = RESIDUAL_BYPASS_DENSE_LAYERS,
+                        b_norm_or_dropout_residual_bypass_layers=B_NORM_OR_DROPOUT_RESIDUAL_BYPASS_LAYERS,
+                        dropout_rate_for_bypass_layers=DROPOUT_RATE_FOR_BYPASS_LAYERS,
                         b_norm_or_dropout_last_layers=B_NORM_OR_DROPOUT_LAST_LAYERS,
                         dropout_rate=DROPOUT_RATE,
                         final_dense_layers =\

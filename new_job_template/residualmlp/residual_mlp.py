@@ -22,6 +22,8 @@ def make_model(learning_rate = .0007,
                flatten_after_base_model = True,
                blocks = [[5,400,50]], # 2D ARRAY: Each row: [number_of_layers,first_layer_neurons, decay_coefficient]
                residual_bypass_dense_layers = list(),
+               b_norm_or_dropout_residual_bypass_layers = 'dropout',
+               dropout_rate_for_bypass_layers = .35,
                b_norm_or_dropout_last_layers = 'dropout', # alternative 'bnorm'
                dropout_rate = .2,
                activation = tf.keras.activations.relu,
@@ -120,12 +122,28 @@ def make_model(learning_rate = .0007,
         x = tf.keras.layers.BatchNormalization()(x) 
         # x proceeds sequentially to the 
         # next Dense layer.
-        y = tf.keras.layers.BatchNormalization()(x)
+        if b_norm_or_dropout_residual_bypass_layers == 'dropout':
+            y = tf.keras.layers.Dropout(dropout_rate_for_bypass_layers)(x)
+        elif b_norm_or_dropout_residual_bypass_layers == 'bnorm':
+            y = tf.keras.layers.BatchNormalization()(x)
+        else:
+            raise ValueError("The parameter: "
+                             "'b_norm_or_dropout_residual_bypass_layers'"
+                             " must be left default '', or be "
+                             "'dropout' or may be 'bnorm'.")
         for bypass_layer in bypass_block:
             y = tf.keras.layers.Dense(bypass_layer,
                                       activation,
                                       kernel_initializer=initializer)(y)
-            y = tf.keras.layers.BatchNormalization()(y)
+            if b_norm_or_dropout_residual_bypass_layers == 'dropout':
+                y = tf.keras.layers.Dropout(dropout_rate_for_bypass_layers)(y)
+            elif b_norm_or_dropout_residual_bypass_layers == 'bnorm':
+                y = tf.keras.layers.BatchNormalization()(y)
+            else:
+                raise ValueError("The parameter: "
+                                 "'b_norm_or_dropout_residual_bypass_layers'"
+                                 " must be left default '', or be "
+                                 "'dropout' or may be 'bnorm'.")
         # y does NOT proceed sequentially
         # to the next layer. This bupasses 
         # several layers and give a memory 
