@@ -19,24 +19,23 @@ if __name__ == '__main__':
     hparams = {
                 'project_name':"tandem-EfficientNetB7-ResidualMLP",
                 'flatten':'True',
-                'blocks':2,
+                'blocks':6,
                 'residual_bypass_dense_layers':'',
-                'b_norm_or_dropout_residual_bypass_layers':'bnorm',
-                'dropout_rate_for_bypass_layers':0.00,
-                'final_layers':3,
-                'b_norm_or_dropout_last_layers':'bnorm',
-                'dropout_rate':'0.00',
-                'epochs':25,
-                'patience':10,
+                'b_norm_or_dropout_residual_bypass_layers':'dropout',
+                'dropout_rate_for_bypass_layers':.25,
+                'final_layers':8,
+                'b_norm_or_dropout_last_layers':'dropout',
+                'dropout_rate':'0.25',
+                'epochs':120,
+                'patience':80,
                 'patience_min_delta':"0.00001",
                 'training_set_size':5000,
                 'batch_size':50,
                 'eval_size': 50,
                 'learning_rate':0.0007,
-                'comments':"Test to make sure the new code in residualmlp/residual_mlp.py doesnt break anything."
+                'comments':"Test Blocks 2 Final layers 5 with dropout."
                 }
-    if hparams['residual_bypass_dense_layers'] == '':
-    	hparams['residual_bypass_dense_layers'] = '""'
+    
     if hparams['flatten'] == "True":
         file_name_flatten = "flatten"
     elif hparams['flatten'] == 'False':

@@ -192,10 +192,8 @@ if __name__ == '__main__':
     BLOCKS.append([[5,100,10],[7,75,8],[5,75,10],[5,75,10]])
     BLOCKS.append([[5,100,10],[7,75,8],[4,75,10]])
     
-    BLOCKS_USED = BLOCKS[BLOCKS_SELECTION]
-    
     if hparams['residual_bypass_dense_layers'] == "":
-        RESIDUAL_BYPASS_DENSE_LAYERS = [list() for itm in BLOCKS_USED]
+        RESIDUAL_BYPASS_DENSE_LAYERS = list()
     else:
         RESIDUAL_BYPASS_DENSE_LAYERS =\
             eval(hparams['residual_bypass_dense_layers'])
@@ -297,7 +295,7 @@ if __name__ == '__main__':
                         base_model= efficient_net_b_7_transferable_base_model,
                         base_model_input_shape = BASE_MODEL_INPUT_SHAPE,
                         flatten_after_base_model = FLATTEN,
-                        blocks = BLOCKS_USED,
+                        blocks = BLOCKS[BLOCKS_SELECTION],
                         residual_bypass_dense_layers = RESIDUAL_BYPASS_DENSE_LAYERS,
                         b_norm_or_dropout_residual_bypass_layers=B_NORM_OR_DROPOUT_RESIDUAL_BYPASS_LAYERS,
                         dropout_rate_for_bypass_layers=DROPOUT_RATE_FOR_BYPASS_LAYERS,
