@@ -9,6 +9,6 @@
     3. Better precision, recall, and other performance metrics with less training data and far fewer epochs.
 4. Are there any drawbacks with using a residual MLP model?
     1. They are a bit computationallly expensive on an epoch - by epoch basis. When training on smaller data sets, they do make up for this when you conider they they need far fewer epochs to reach convergence.
-    2. Although they can train quickly, for the time they are training, they do need large hardware configurations to complete training successfully. For example, attempting to train a model using the pre-trained EfficientNetB7-ResidutalMLP (with optimal residual MLP hyperparameter and neural network architecture) will exhaust the RAM on a machine having 45GB of RAM, unless the machine has at least 2 A4000 GPUs. 
+    2. Although they can train quickly, for the time they are training, they do need large hardware configurations to complete training successfully. For example, attempting to train a model using the pre-trained EfficientNetB7-ResidualMLP (with optimal residual MLP hyperparameters and neural network architecture) will exhaust the RAM on a machine having 45GB of RAM, unless the machine has at least 2 A4000 GPUs. This can make some jobs not financially worth the cost of training them. However, for training jobs that have failed due to small sample size / not enough data which are worth $3 to $50 per training run, this may be an ideal overall algorithm.
 4. Use example:
     Under construction...
