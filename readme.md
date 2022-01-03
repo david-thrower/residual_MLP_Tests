@@ -12,3 +12,15 @@
     2. Although they can train quickly, for the time they are training, they do need large hardware configurations to complete training successfully. For example, attempting to train a model using the pre-trained EfficientNetB7-ResidualMLP (with optimal residual MLP hyperparameters and neural network architecture) will exhaust the RAM on a machine having 45GB of RAM, unless the machine has at least 2 A4000 GPUs. This can make some jobs not financially worth the cost of training them. However, for training jobs that have failed due to small sample size / not enough data which are worth $3 to $50 per training run, this may be an ideal overall algorithm.
 4. Use example:
     Under construction...
+5. License: Licensed under a modified MIT license, but with the following exclusions (the following uses are considered abuse of my work and are strictly prohibited): 
+    1. Military use, 
+    2. Law enforcement use intended to lead to or manage incarceration, 
+    3. Use in committing crimes, 
+    4. Use in any application supporting the adult films industry 
+    5. Use in any application supporting the alcoholic beverages, firearms, and / or tobaco industries,
+    6. Any use supporting the trade, marketing of, or administration of prescription drugs which are commonly abused 
+    7. Use in a manner intended to identify or discriminate against anyone on any ethnic, ideological,  religious, racial, demographic, or socioeconomic / *credit status (which includes lawful credit, tenant, and and HR screening* other than screening for criminal history).
+    8. Any use supporting any operation which attempts to sway public opinion, political alignment, or purchasing habits via means such as:
+        1. Misleading the public to beleive that the opinions promoted by said operation are those of a different group of people (commonly referred to as astroturfing).
+        2. Leading the public to beleive premises that contradict duly accepted scientific findings, implausible doctrines, or premises that are generally regarded as heretical or occult.
+    9. These or anything reasonably regarded as similar to these are prohibited uses of this codebase AND ANY DERIVITIVE WORK. Litigation will result upon discovery of any such violations.
