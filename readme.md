@@ -21,6 +21,6 @@
     6. Any use supporting the trade, marketing of, or administration of prescription drugs which are commonly abused 
     7. Use in a manner intended to identify or discriminate against anyone on any ethnic, ideological,  religious, racial, demographic, or socioeconomic / *credit status (which includes lawful credit, tenant, and and HR screening* other than screening for criminal history).
     8. Any use supporting any operation which attempts to sway public opinion, political alignment, or purchasing habits via means such as:
-        1. Misleads the public to beleive thate the opinions promoted by said operation are those of a different group of people (commonly referred to as astroturfing).
+        1. Misleading the public to beleive that the opinions promoted by said operation are those of a different group of people (commonly referred to as astroturfing).
         2. Leading the public to beleive premises that contradict duly accepted scientific findings, implausible doctrines, or premises that are generally regarded as heretical or occult.
-    9. These or anythg reasonablu regarded as similar to these are prohibited uses of this codebase AND ANY DERIVITIVE WORK.
+    9. These or anything reasonably regarded as similar to these are prohibited uses of this codebase AND ANY DERIVITIVE WORK. Litigation will result upon discovery of any such violations.
