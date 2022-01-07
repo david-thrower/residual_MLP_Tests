@@ -67,33 +67,33 @@ def make_model(learning_rate = .0007,
     else:
         residual_bypass_dense_layers = [[] for block in blocks]
     
-    precision = tf.keras.metrics.Precision(), 
-    recall = tf.keras.metrics.Recall()
-    accuracy = tf.keras.metrics.Accuracy()
-    top_5 = tf.keras.metrics.TopKCategoricalAccuracy(k=5, 
-                                 name='top_5_categorical_accuracy', 
-                                 dtype=None)
-    top_4 = tf.keras.metrics.TopKCategoricalAccuracy(k=4, 
-                                                     name='top_4_categorical_accuracy', 
-                                                     dtype=None)
-    top_3 = tf.keras.metrics.TopKCategoricalAccuracy(k=3, 
-                                                     name='top_3_categorical_accuracy', 
-                                                     dtype=None)
-    top_2 = tf.keras.metrics.TopKCategoricalAccuracy(k=2, 
-                                 name='top_2_categorical_accuracy', 
-                                 dtype=None)
-    top_1 = tf.keras.metrics.TopKCategoricalAccuracy(k=1, 
-                                 name='top_1_categorical_accuracy', 
-                                 dtype=None)   
+    #precision = tf.keras.metrics.Precision(), 
+    #recall = tf.keras.metrics.Recall()
+    #accuracy = tf.keras.metrics.Accuracy()
+    #top_5 = tf.keras.metrics.TopKCategoricalAccuracy(k=5, 
+    #                             name='top_5_categorical_accuracy', 
+    #                             dtype=None)
+    #top_4 = tf.keras.metrics.TopKCategoricalAccuracy(k=4, 
+    #                                                 name='top_4_categorical_accuracy', 
+    #                                                 dtype=None)
+    #top_3 = tf.keras.metrics.TopKCategoricalAccuracy(k=3, 
+    #                                                 name='top_3_categorical_accuracy', 
+    #                                                 dtype=None)
+    #top_2 = tf.keras.metrics.TopKCategoricalAccuracy(k=2, 
+    #                             name='top_2_categorical_accuracy', 
+    #                             dtype=None)
+    #top_1 = tf.keras.metrics.TopKCategoricalAccuracy(k=1, 
+    #                             name='top_1_categorical_accuracy', 
+    #                             dtype=None)   
     rmse = tf.keras.metrics.RootMeanSquaredError() 
-    metrics = [precision,
-               recall,
-               accuracy,
-               top_5,
-               top_4,
-               top_3,
-               top_2,
-               top_1,
+    metrics = [#precision,
+               #recall,
+               #accuracy,
+               #top_5,
+               #top_4,
+               #top_3,
+               #top_2,
+               #top_1,
                rmse]
     # Use number_of_classes = 1 for a regression problem still. I paln to apply
     # automation to parameterize and selectively include all commonly used the metrics
@@ -193,4 +193,3 @@ def make_model(learning_rate = .0007,
                      loss=loss, 
                      metrics=metrics)
     return modelo_final
-
