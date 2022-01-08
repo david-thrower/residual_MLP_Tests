@@ -14,7 +14,8 @@ def grayscale_to_rgb(images, channel_axis=-1):
 
 
 # builds and compiles a model given these params:
-def make_model(learning_rate = .0007,
+def make_model(problem_type = 'classification',
+               learning_rate = .0007,
                input_shape = (32,32,3),
                bw_images = False,
                base_model = '',
@@ -67,32 +68,27 @@ def make_model(learning_rate = .0007,
     else:
         residual_bypass_dense_layers = [[] for block in blocks]
     
-    precision = tf.keras.metrics.Precision(), 
-    recall = tf.keras.metrics.Recall()
-    accuracy = tf.keras.metrics.Accuracy()
-    top_5 = tf.keras.metrics.TopKCategoricalAccuracy(k=5, 
-                                 name='top_5_categorical_accuracy', 
-                                 dtype=None)
-    top_4 = tf.keras.metrics.TopKCategoricalAccuracy(k=4, 
-                                                     name='top_4_categorical_accuracy', 
-                                                     dtype=None)
-    top_3 = tf.keras.metrics.TopKCategoricalAccuracy(k=3, 
-                                                     name='top_3_categorical_accuracy', 
-                                                     dtype=None)
-    top_2 = tf.keras.metrics.TopKCategoricalAccuracy(k=2, 
-                                 name='top_2_categorical_accuracy', 
-                                 dtype=None)
-    top_1 = tf.keras.metrics.TopKCategoricalAccuracy(k=1, 
-                                 name='top_1_categorical_accuracy', 
-                                 dtype=None)    
-    metrics = [precision,
-               recall,
-               accuracy,
-               top_5,
-               top_4,
-               top_3,
-               top_2,
-               top_1]
+    if problem_type == 'classification':
+        precision = tf.keras.metrics.Precision(), 
+        recall = tf.keras.metrics.Recall()
+        accuracy = tf.keras.metrics.Accuracy()
+    if problem_type == 'classification' and number_of_classes > 1:
+        metrics = [ tf.keras.metrics.TopKCategoricalAccuracy(k = k,
+                                                             name=f'top_{k}_'
+                                                             'categorical_'
+                                                             'accuracy',
+                                                             dtype=None )
+                       for k in np.arange(1,number_of_classes)]
+        metrics.append(precision)
+        metrics.append(recall)
+        metrics.append(accuracy)
+    elif problem_type == 'classification' and number_of_classes == 1:    
+        metrics = [precision, recall, accuracy]
+    else:
+        rmse = tf.keras.metrics.RootMeanSquaredError()
+        mae = tf.keras.metrics.MeanAbsoluteError()
+        metrics = [rmse, mae]
+
     # Use number_of_classes = 1 for a regression problem still. I paln to apply
     # automation to parameterize and selectively include all commonly used the metrics
     # that are valid for the problem type and number of classes ... 
