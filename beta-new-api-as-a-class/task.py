@@ -1,6 +1,5 @@
 import argparse
 import os
-import json
 import pandas as pd
 import tensorflow as tf
 from residualmlp.residual_mlp import ResidualMLP
