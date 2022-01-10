@@ -1,0 +1,349 @@
+import argparse
+import os
+import json
+import pandas as pd
+import tensorflow as tf
+from residualmlp.residual_mlp import ResidualMLP
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--project_name", type=str, 
+                        help="Name for this project.")
+    parser.add_argument(
+        "--flatten",
+        type=str,
+        help="Flatten output of base model before forwarding to the "
+        + "Residual Multi Layer Perceptron?",
+        default="True",
+    )
+    parser.add_argument(
+        "--blocks",
+        type=int,
+        help="Which residual Multi Layer Perceptron architecture "
+        + "selection to try?",
+        default=2,
+    )
+    parser.add_argument(
+        "--residual_bypass_dense_layers",
+        type=str,
+        help="A string representation of a 2d array. Each ith 1d array "
+        + "in this 2d array will be a list of integers. For each "
+        + "integer n, there will be a Dense inserted in the residual "
+        + "bypass for the ith block. If you leave this default, it will "
+        + "be an empty list and will add no layers. This is very "
+        + "challenging to articulate andis advisable to refer to our "
+        + "tutorials or documentation. Note the order, tutorials first.",
+        default="",
+    )
+    parser.add_argument(
+        "--final_layers",
+        type=int,
+        help="Which final layers architecture option to try?",
+        default=5,
+    )
+    parser.add_argument(
+        "--b_norm_or_dropout_last_layers",
+        type=str,
+        help="Options are 'dropout' or 'bnorm'.",
+        default="bnorm",
+    )
+    parser.add_argument(
+        "--dropout_rate",
+        type=float,
+        help="Dropout rate. Ignored unless b_norm_or_dropout_last_layers set "
+            "to 'dropout'.",
+        default="bnorm",
+    )
+    parser.add_argument(
+        "--results_dir", type=str, help="directory for results", 
+        default="results"
+    )
+    parser.add_argument(
+        "--best_model_dir",
+        type=str,
+        help="Directory for model.save to save the best model?",
+        default="best_model",
+    )
+    parser.add_argument(
+        "--epochs", type=int, help="How many training epochs?", default=50
+    )
+    parser.add_argument(
+        "--patience",
+        type=int,
+        help="How many epochs with no improved performance before the "
+        + "early stopping callback gives up?",
+        default=150,
+    )
+    parser.add_argument(
+        "--patience_min_delta",
+        type=float,
+        help="How sensitive should the early stopping callback be"
+            "  to change?",
+        default=0.00001,
+    )
+    parser.add_argument(
+        "--training_set_size",
+        type=int,
+        help="How many observations to train with...",
+        default=5000,
+    )
+    parser.add_argument(
+        "--batch_size",
+        type=int,
+        help="How many observations to train with...",
+        default=50,
+    )
+    parser.add_argument(
+        "--eval_size",
+        type=int,
+        help="How many observations per training batch...",
+        default=50,
+    )
+    parser.add_argument(
+        "--learning_rate", type=float, help="Learning_rate...", default=0.0007
+    )
+    parser.add_argument(
+        "--b_norm_or_dropout_residual_bypass_layers",
+        type=str,
+        help="For the residual bypass layers, batch normalize "
+            "or dropout after layer?",
+        default="dropout",
+    )
+    parser.add_argument(
+        "--dropout_rate_for_bypass_layers",
+        type=float,
+        help="For the residual bypass layers, dropout rate?",
+        default=0.25,
+    )
+
+    # parser.add_argument(
+    #     "--learning_rate_decay_factor",
+    #     type=int,
+    #     help = "Learning_rate...",
+    #     default = .00001
+    # )
+    args, _ = parser.parse_known_args()
+    hparams = args.__dict__
+    print("Hyperparameters and metadata:")
+    print(hparams)
+    # Parsed params:
+    # BATCH_SIZE = hparams['batch_size'] *
+    # BW_IMAGES = hparams['bw_images'] == "True"
+    # LEARNING_RATE = hparams['learning_rate'] *
+
+    LEARNING_RATE = hparams["learning_rate"]
+    PATIENCE_MIN_DELTA = hparams["patience_min_delta"]
+    BATCH_SIZE = hparams["batch_size"]
+    TRAINING_SET_SIZE = hparams["training_set_size"]
+    EVAL_BATCH_SIZE = hparams["eval_size"]
+    # MAX_TRIALS = 20 # change to at least 1000 for the scales up test
+    PROJECT_NAME = hparams["project_name"]
+    # HYPERBAND_ITERATIONS = hparams['hyperband_iterations']
+    # MAX_EPOCHS = hparams['max_epochs']
+    RESULTS_DIR = hparams["results_dir"]
+    BEST_MODEL_DIR = hparams["best_model_dir"]
+    EPOCHS = hparams["epochs"]
+    PATIENCE = hparams["patience"]
+    BLOCKS_SELECTION = hparams["blocks"]
+    FINAL_DENSE_LAYERS_SELECTION = hparams["final_layers"]
+    if hparams["flatten"] == "True":
+        FLATTEN = True
+    elif hparams["flatten"] == "False":
+        FLATTEN = False
+    else:
+        raise ValueError("The parametr --flatten must be 'True' or 'False'.")
+
+    # #########
+
+    # Things to parameterize
+    # PROJECT_NAME = 'small-test'
+    # RESULTS_DIR = 'small-test-results'
+    # BEST_MODEL_DIR = 'small-test-best-model'
+    # EPOCHS = 1000
+    # PATIENCE = 7
+
+    BATCH_SIZE = 50  # [5,10,20,50]
+    BLOCKS = []
+    BLOCKS.append([[5, 100, 10], [7, 50, 5]])
+    BLOCKS.append([[5, 100, 10], [7, 75, 8]])
+    BLOCKS.append([[5, 75, 10], [5, 75, 10], [5, 75, 10],\
+                   [5, 75, 10], [5, 75, 10]])
+    BLOCKS.append([[5, 150, 10]])
+    BLOCKS.append([[6, 200, 25]])
+    BLOCKS.append(
+        [[5, 150, 10], [5, 75, 10], [5, 75, 10], [5, 75, 10], [5, 75, 10],\
+         [5, 75, 10]]
+    )
+    BLOCKS.append([[5, 100, 10], [7, 75, 8], [5, 75, 10]])
+    BLOCKS.append([[5, 100, 10], [7, 75, 8], [5, 75, 10], [5, 75, 10]])
+    BLOCKS.append([[5, 100, 10], [7, 75, 8], [4, 75, 10]])
+
+    BLOCKS_USED = BLOCKS[BLOCKS_SELECTION]
+
+    if hparams["residual_bypass_dense_layers"] == "":
+        RESIDUAL_BYPASS_DENSE_LAYERS = [list() for itm in BLOCKS_USED]
+    else:
+        RESIDUAL_BYPASS_DENSE_LAYERS = eval(
+            hparams["residual_bypass_dense_layers"])
+        if not isinstance(RESIDUAL_BYPASS_DENSE_LAYERS, list):
+            raise ValueError(
+                "The parameter residual_bypass_dense_layers "
+                "should be the string representation of either: "
+                "1. A 2d list, one 1d list of integers for each "
+                "ith block in blocks. For each jth item n in "
+                "each ith 1d list, a dense layer with n "
+                "neurons will be inserted in the residual bypass"
+                " for the ith block. Please refer to the "
+                "tutorials. OR the parameter "
+                "residual_bypass_dense_layers may be an empty "
+                "list."
+            )
+    B_NORM_OR_DROPOUT_RESIDUAL_BYPASS_LAYERS = hparams[
+        "b_norm_or_dropout_residual_bypass_layers"
+    ]
+    DROPOUT_RATE_FOR_BYPASS_LAYERS = hparams["dropout_rate_for_bypass_layers"]
+
+    B_NORM_OR_DROPOUT_LAST_LAYERS = hparams["b_norm_or_dropout_last_layers"]
+    DROPOUT_RATE = hparams["dropout_rate"]
+
+    FINAL_DENSE_LAYERS_PERMUTATIONS = []
+    FINAL_DENSE_LAYERS_PERMUTATIONS.append([75, 35])
+    FINAL_DENSE_LAYERS_PERMUTATIONS.append([100, 35])
+    FINAL_DENSE_LAYERS_PERMUTATIONS.append([50, 50])
+    FINAL_DENSE_LAYERS_PERMUTATIONS.append([35, 35])
+    FINAL_DENSE_LAYERS_PERMUTATIONS.append([25, 10])
+    FINAL_DENSE_LAYERS_PERMUTATIONS.append([25, 25, 25])
+    FINAL_DENSE_LAYERS_PERMUTATIONS.append([75, 25, 25])
+    FINAL_DENSE_LAYERS_PERMUTATIONS.append([100, 35, 20])
+    FINAL_DENSE_LAYERS_PERMUTATIONS.append([35, 35, 15])
+
+    # hard coded variables
+    HEIGHT = 32
+    WIDTH = 32
+    CHANNELS = 3
+    INPUT_SHAPE = (HEIGHT, WIDTH, CHANNELS)
+    BASE_MODEL_INPUT_SHAPE = (600, 600, 3)
+
+    tf.keras.backend.clear_session()
+
+    # tf_config = {
+    #    'cluster': {
+    #        'worker': ['localhost:12345', 'localhost:23456','localhost:23457']
+    #    },
+    #    'task': {'type': 'worker', 'index': 0}
+    # }
+    # os.environ["TF_CONFIG"] = json.dumps(tf_config)
+    strategy = tf.distribute.MirroredStrategy(devices=None, 
+                                              cross_device_ops=None)
+
+    # tf.distribute.experimental.MultiWorkerMirroredStrategy()
+
+    cifar = tf.keras.datasets.cifar10.load_data()
+    (x_train, y_train), (x_test, y_test) = cifar
+
+    y_train_ohe = tf.one_hot([i[0] for i in y_train], 10)
+    indexes_for_rows = tf.range(0, y_train.shape[0])
+    shuffled_indexes = tf.random.shuffle(indexes_for_rows)
+    selected_indexes = shuffled_indexes[:TRAINING_SET_SIZE]
+    selected_x_train = x_train[selected_indexes, :, :, :]
+    selected_y_train_ohe = y_train_ohe.numpy()[selected_indexes, :]
+
+    # It looks weird that we are using a base model with 1000 classes.
+    # To pull the model that is pre-trained on imagenet, we have to do this
+    # or we get a model with uninitilized weights. Not recommended for
+    # transfer learning...
+    with strategy.scope():
+        # Base moel for transfer learning: (needs a few modifications...)
+        mod_with_fc_raw = tf.keras.applications.efficientnet.EfficientNetB7(
+            include_top=True,
+            weights="imagenet",
+            input_tensor=None,
+            input_shape=BASE_MODEL_INPUT_SHAPE,
+            pooling="max",
+            classes=1000,
+        )
+
+        # Make the deepest conv2d layer trainable, leave everything else
+        # as not trainable
+        for layer in mod_with_fc_raw.layers:
+            layer.trainable = False
+        # Last conv2d layer. This we want to train .
+        mod_with_fc_raw.layers[-6].trainable = True
+
+        efficient_net_b_7_transferable_base_model = tf.keras.Model(
+            inputs=mod_with_fc_raw.layers[0].input,
+            outputs=mod_with_fc_raw.layers[-3].output,
+        )
+
+        # build a tandem EfficientNetB7-ResidualMLP model using my ResidualMLP
+        # package
+        res_mlp = ResidualMLP(
+            learning_rate=LEARNING_RATE,
+            input_shape=INPUT_SHAPE,
+            base_model=efficient_net_b_7_transferable_base_model,
+            base_model_input_shape=BASE_MODEL_INPUT_SHAPE,
+            flatten_after_base_model=FLATTEN,
+            blocks=BLOCKS_USED,
+            residual_bypass_dense_layers=RESIDUAL_BYPASS_DENSE_LAYERS,
+            b_norm_or_dropout_residual_bypass_layers=B_NORM_OR_DROPOUT_RESIDUAL_BYPASS_LAYERS,
+            dropout_rate_for_bypass_layers=DROPOUT_RATE_FOR_BYPASS_LAYERS,
+            b_norm_or_dropout_last_layers=B_NORM_OR_DROPOUT_LAST_LAYERS,
+            dropout_rate=DROPOUT_RATE,
+            final_dense_layers=FINAL_DENSE_LAYERS_PERMUTATIONS[
+                FINAL_DENSE_LAYERS_SELECTION
+            ],
+        )
+        model = res_mlp.make_tandem_model()
+
+    logdir = os.path.join("logs", RESULTS_DIR + "_TB")
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(logdir, histogram_freq=1)
+
+    history = model.fit(
+        x=selected_x_train,
+        y=selected_y_train_ohe,
+        batch_size=BATCH_SIZE,
+        epochs=EPOCHS,
+        verbose="auto",
+        callbacks=[
+            tf.keras.callbacks.EarlyStopping(
+                monitor="val_loss",
+                patience=PATIENCE,
+                min_delta=PATIENCE_MIN_DELTA,
+                restore_best_weights=True,
+            ),
+            tensorboard_callback,
+        ],
+        validation_split=0.3,
+        validation_data=None,
+        shuffle=True,
+        class_weight=None,
+        sample_weight=None,
+        initial_epoch=0,
+        steps_per_epoch=None,
+        validation_steps=None,
+        validation_batch_size=10,
+        validation_freq=1,
+        max_queue_size=10,
+        workers=5,
+        use_multiprocessing=True,
+    )
+
+    hist_df = pd.DataFrame(history.history)
+
+    try:
+        # save to json:
+        hist_json_file = f"{BEST_MODEL_DIR}-history.json"
+        hist_df.to_json(hist_json_file)
+    except Exception as error_msg:
+        print(error_msg)
+
+    try:
+        # save a csv ...
+        hist_csv_file = f"{BEST_MODEL_DIR}-history.csv"
+        hist_df.to_csv(hist_csv_file)
+    except Exception as error_msg:
+        print(error_msg)
+
+    model.save(BEST_MODEL_DIR)
+
+    print("Successful run...")
