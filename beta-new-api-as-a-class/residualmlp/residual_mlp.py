@@ -97,126 +97,131 @@ class ResidualMLP():
         return im
 
 
-# builds and compiles a model given these params:
-def make_tandem_model(self):
-    if self.problem_type == 'classification':
-        precision = tf.keras.metrics.Precision(), 
-        recall = tf.keras.metrics.Recall()
-        accuracy = tf.keras.metrics.Accuracy()
-    if self.problem_type == 'classification' and self.number_of_classes > 1:
-        metrics = [ tf.keras.metrics.TopKCategoricalAccuracy(k = k,
-                                                             name=f'top_{k}_'
-                                                             'categorical_'
-                                                             'accuracy',
-                                                             dtype=None)
-                       for k in np.arange(1,self.number_of_classes) if k < 6]
-        metrics.append(precision)
-        metrics.append(recall)
-        metrics.append(accuracy)
-    elif self.problem_type == 'classification' and\
-            self.number_of_classes == 1:    
-        metrics = [precision, recall, accuracy]
-    else:
-        rmse = tf.keras.metrics.RootMeanSquaredError()
-        mae = tf.keras.metrics.MeanAbsoluteError()
-        metrics = [rmse, mae]
-
-    inp = tf.keras.layers.Input(shape = self.input_shape) 
-    # Start with input layer that fits. 
-    # The keras fucntional API will blow up appearently if
-    # there is not an explicit input layer 
-    # that coerces inputs as a specific size
-    # quite annoying if you ask me, but
-    # obviously Google didn't, so here 
-    # we are ...
-    if self.bw_images:
-        x = self.grayscale_to_rgb(inp)
-    else:
-        x = inp
-    if self.base_model != '':
-        x = tf.keras.layers.Resizing(self.base_model_input_shape[0],
-                                     self.base_model_input_shape[1])(x)
-        x = self.base_model(x)
-    if self.flatten_after_base_model:
-        tf.keras.layers.Flatten()(x)
-    initializer = tf.keras.initializers.GlorotNormal()
-    for block, bypass_block in zip(self.blocks,
-                                   self.residual_bypass_dense_layers):
-        x = tf.keras.layers.Dense(block[1],
-                                  self.activation,
-                                  kernel_initializer=initializer)(x) 
-        x = tf.keras.layers.BatchNormalization()(x) 
-        # x proceeds sequentially to the 
-        # next Dense layer.
-        if self.b_norm_or_dropout_residual_bypass_layers == 'dropout':
-            y = tf.keras.layers\
-                .Dropout(self.dropout_rate_for_bypass_layers)(x)
-        elif self.b_norm_or_dropout_residual_bypass_layers == 'bnorm':
-            y = tf.keras.layers.BatchNormalization()(x)
+    # builds and compiles a tandem model given these params and
+    # selected base model:
+    def make_tandem_model(self):
+        if self.problem_type == 'classification':
+            precision = tf.keras.metrics.Precision(), 
+            recall = tf.keras.metrics.Recall()
+            accuracy = tf.keras.metrics.Accuracy()
+        if self.problem_type == 'classification' and\
+                self.number_of_classes > 1:
+            metrics = [ tf.keras.metrics.TopKCategoricalAccuracy(
+                k = k,
+                name=f'top_{k}_'
+                'categorical_'
+                'accuracy',
+                dtype=None)
+                           for k in np.arange(1,self.number_of_classes)\
+                               if k < 6]
+            metrics.append(precision)
+            metrics.append(recall)
+            metrics.append(accuracy)
+        elif self.problem_type == 'classification' and\
+                self.number_of_classes == 1:    
+            metrics = [precision, recall, accuracy]
         else:
-            raise ValueError("The parameter: "
-                             "'b_norm_or_dropout_residual_bypass_layers'"
-                             " must be left default '', or be "
-                             "'dropout' or may be 'bnorm'.")
-        for bypass_layer in bypass_block:
-            y = tf.keras.layers.Dense(bypass_layer,
+            rmse = tf.keras.metrics.RootMeanSquaredError()
+            mae = tf.keras.metrics.MeanAbsoluteError()
+            metrics = [rmse, mae]
+    
+        inp = tf.keras.layers.Input(shape = self.input_shape) 
+        # Start with input layer that fits. 
+        # The keras fucntional API will blow up appearently if
+        # there is not an explicit input layer 
+        # that coerces inputs as a specific size
+        # quite annoying if you ask me, but
+        # obviously Google didn't, so here 
+        # we are ...
+        if self.bw_images:
+            x = self.grayscale_to_rgb(inp)
+        else:
+            x = inp
+        if self.base_model != '':
+            x = tf.keras.layers.Resizing(self.base_model_input_shape[0],
+                                         self.base_model_input_shape[1])(x)
+            x = self.base_model(x)
+        if self.flatten_after_base_model:
+            tf.keras.layers.Flatten()(x)
+        initializer = tf.keras.initializers.GlorotNormal()
+        for block, bypass_block in zip(self.blocks,
+                                       self.residual_bypass_dense_layers):
+            x = tf.keras.layers.Dense(block[1],
                                       self.activation,
-                                      kernel_initializer=initializer)(y)
+                                      kernel_initializer=initializer)(x) 
+            x = tf.keras.layers.BatchNormalization()(x) 
+            # x proceeds sequentially to the 
+            # next Dense layer.
             if self.b_norm_or_dropout_residual_bypass_layers == 'dropout':
                 y = tf.keras.layers\
-                    .Dropout(self.dropout_rate_for_bypass_layers)(y)
+                    .Dropout(self.dropout_rate_for_bypass_layers)(x)
             elif self.b_norm_or_dropout_residual_bypass_layers == 'bnorm':
-                y = tf.keras.layers.BatchNormalization()(y)
+                y = tf.keras.layers.BatchNormalization()(x)
             else:
                 raise ValueError("The parameter: "
                                  "'b_norm_or_dropout_residual_bypass_layers'"
                                  " must be left default '', or be "
                                  "'dropout' or may be 'bnorm'.")
-        # y does NOT proceed sequentially
-        # to the next layer. This bypasses 
-        # several layers and give a memory 
-        # that attenuates some of the 
-        # deleterious effects of a deeper 
-        # network and lets us capture more 
-        # complex interactions before 
-        # overfitting becomes an issue than 
-        # the textbook sequential multi - 
-        # layer perceptron ...
-        for j in np.arange(block[0]): 
-            x = tf.keras.layers.Dense(block[1] - block[2] * j,
+            for bypass_layer in bypass_block:
+                y = tf.keras.layers.Dense(bypass_layer,
+                                          self.activation,
+                                          kernel_initializer=initializer)(y)
+                if self.b_norm_or_dropout_residual_bypass_layers == 'dropout':
+                    y = tf.keras.layers\
+                        .Dropout(self.dropout_rate_for_bypass_layers)(y)
+                elif self.b_norm_or_dropout_residual_bypass_layers == 'bnorm':
+                    y = tf.keras.layers.BatchNormalization()(y)
+                else:
+                    raise ValueError("The parameter: "
+                                     "'b_norm_or_dropout_residual_bypass_"
+                                     "layers' must be left default '', or be "
+                                     "'dropout' or may be 'bnorm'.")
+            # y does NOT proceed sequentially
+            # to the next layer. This bypasses 
+            # several layers and give a memory 
+            # that attenuates some of the 
+            # deleterious effects of a deeper 
+            # network and lets us capture more 
+            # complex interactions before 
+            # overfitting becomes an issue than 
+            # the textbook sequential multi - 
+            # layer perceptron ...
+            for j in np.arange(block[0]): 
+                x = tf.keras.layers.Dense(block[1] - block[2] * j,
+                                          self.activation,
+                                          kernel_initializer=initializer)(x) 
+                x = tf.keras.layers.BatchNormalization()(x)
+    
+            x = tf.keras.layers.Concatenate(axis=1)([x, y])
+            x = tf.keras.layers.Dense(block[1] - block[2] * block[0],
+                                      self.activation,
+                                      kernel_initializer=initializer)(x)
+            x = tf.keras.layers.BatchNormalization()(x)
+    
+        for i in self.final_dense_layers:
+            x = tf.keras.layers.Dense(i,
                                       self.activation,
                                       kernel_initializer=initializer)(x) 
-            x = tf.keras.layers.BatchNormalization()(x)
-
-        x = tf.keras.layers.Concatenate(axis=1)([x, y])
-        x = tf.keras.layers.Dense(block[1] - block[2] * block[0],
-                                  self.activation,
-                                  kernel_initializer=initializer)(x)
-        x = tf.keras.layers.BatchNormalization()(x)
-
-    for i in self.final_dense_layers:
-        x = tf.keras.layers.Dense(i,
-                                  self.activation,
-                                  kernel_initializer=initializer)(x) 
-        if self.b_norm_or_dropout_last_layers == 'bnorm':
-            x = tf.keras.layers.BatchNormalization()(x)
-        elif self.b_norm_or_dropout_last_layers == 'dropout':
-            x = tf.keras.layers.Dropout(self.dropout_rate)(x)
-        else:
-            raise ValueError("For b_norm_or_dropout_last_layers, " 
-                             "you must pick either 'dropout' or 'bnorm'")
-    out = tf.keras.layers.Dense(self.number_of_classes,
-                                self.final_activation,
-                                kernel_initializer=initializer)(x)
-
-    # Declare the graph for our model ...
-    modelo_final = tf.keras.Model(inputs=inp,outputs = out)
+            if self.b_norm_or_dropout_last_layers == 'bnorm':
+                x = tf.keras.layers.BatchNormalization()(x)
+            elif self.b_norm_or_dropout_last_layers == 'dropout':
+                x = tf.keras.layers.Dropout(self.dropout_rate)(x)
+            else:
+                raise ValueError("For b_norm_or_dropout_last_layers, " 
+                                 "you must pick either 'dropout' or 'bnorm'")
+        out = tf.keras.layers.Dense(self.number_of_classes,
+                                    self.final_activation,
+                                    kernel_initializer=initializer)(x)
     
-    modelo_final\
-        .compile(optimizer=\
-                 tf.keras.optimizers.Adam(learning_rate=self.learning_rate, 
-                                          clipnorm=1.0),
-                     loss=self.loss, 
-                     metrics=metrics)
-    return modelo_final
+        # Declare the graph for our model ...
+        modelo_final = tf.keras.Model(inputs=inp,outputs = out)
+        
+        modelo_final\
+            .compile(optimizer=\
+                     tf.keras.optimizers.Adam(
+                         learning_rate=self.learning_rate, 
+                         clipnorm=1.0),
+                         loss=self.loss, 
+                         metrics=metrics)
+        return modelo_final
 
