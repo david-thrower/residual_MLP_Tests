@@ -114,6 +114,21 @@ if __name__ == "__main__":
         help="For the residual bypass layers, dropout rate?",
         default=0.25,
     )
+    parser.add_argument(
+        "--inter_block_layers_per_block",
+        type=str,
+        help="String representation of a 1d list of positive integers. Each "
+        "positive integer i will insert 1 Dense layer having i dense units "
+        "in between each pair of of sequential residual blocks. For example,"
+        "If blocks is [[5,10,1],[5,15,2]] and inter_block_layers_per_block is"
+        "[3,2], then your architecture will look like [Residual_block_1] ->"
+        "Dense(3) -> Dense(2) -> [Residual_block_2]-> [any_final_layers] ->"
+        "[output_layer_in_other_words_Dense(number_of_classes,"
+        "final_activation))). If you want no layers betwen residual blocks, "
+        "use an empty list or leave default.", 
+        default="[]",
+    )
+    
 
     # parser.add_argument(
     #     "--learning_rate_decay_factor",
@@ -201,7 +216,8 @@ if __name__ == "__main__":
         "b_norm_or_dropout_residual_bypass_layers"
     ]
     DROPOUT_RATE_FOR_BYPASS_LAYERS = hparams["dropout_rate_for_bypass_layers"]
-
+    INTER_BLOCK_LAYERS_PER_BLOCK =\
+        eval(hparams['inter_block_layers_per_block'])
     B_NORM_OR_DROPOUT_LAST_LAYERS = hparams["b_norm_or_dropout_last_layers"]
     DROPOUT_RATE = hparams["dropout_rate"]
 
@@ -286,6 +302,7 @@ if __name__ == "__main__":
             residual_bypass_dense_layers=RESIDUAL_BYPASS_DENSE_LAYERS,
             b_norm_or_dropout_residual_bypass_layers=B_NORM_OR_DROPOUT_RESIDUAL_BYPASS_LAYERS,
             dropout_rate_for_bypass_layers=DROPOUT_RATE_FOR_BYPASS_LAYERS,
+            inter_block_layers_per_block=INTER_BLOCK_LAYERS_PER_BLOCK,
             b_norm_or_dropout_last_layers=B_NORM_OR_DROPOUT_LAST_LAYERS,
             dropout_rate=DROPOUT_RATE,
             final_dense_layers=FINAL_DENSE_LAYERS_PERMUTATIONS[

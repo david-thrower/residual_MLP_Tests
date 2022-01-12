@@ -203,7 +203,7 @@ class ResidualMLP:
             x = tf.keras.layers.Concatenate(axis=1)([x, y])
             
             if block != np.arange(len(self.blocks)).max():
-                for inter_block_layer in self.inter_block_layers:
+                for inter_block_layer in self.inter_block_layers_per_block:
                     x = tf.keras.layers.Dense(inter_block_layer,
                                           self.activation,
                                           kernel_initializer=initializer)(x)
