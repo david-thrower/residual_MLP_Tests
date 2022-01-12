@@ -148,18 +148,21 @@ class ResidualMLP:
                                        self.residual_bypass_dense_layers):
             x = tf.keras.layers.Dense(block[1],
                                       self.activation,
-                                      kernel_initializer=initializer)(x) 
+                                      kernel_initializer=initializer)(x)
+            y = x
             x = tf.keras.layers.BatchNormalization()(x) 
             # x proceeds sequentially to the 
             # next Dense layer.
+            
             if self.b_norm_or_dropout_residual_bypass_layers == 'dropout':
                 y = tf.keras.layers\
-                    .Dropout(self.dropout_rate_for_bypass_layers)(x)
+                    .Dropout(self.dropout_rate_for_bypass_layers)(y)
             elif self.b_norm_or_dropout_residual_bypass_layers == 'bnorm':
-                y = tf.keras.layers.BatchNormalization()(x)
+                y = tf.keras.layers.BatchNormalization()(y)
             else:
                 raise ValueError("The parameter: "
-                                 "'b_norm_or_dropout_residual_bypass_layers'"
+                                 "'b_norm_or_dropout_residual_bypass_"
+                                 "layers'"
                                  " must be left default '', or be "
                                  "'dropout' or may be 'bnorm'.")
             for bypass_layer in bypass_block:
