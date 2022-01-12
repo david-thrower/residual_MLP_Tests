@@ -23,6 +23,7 @@ if __name__ == '__main__':
                 'residual_bypass_dense_layers':'',
                 'b_norm_or_dropout_residual_bypass_layers':'bnorm',
                 'dropout_rate_for_bypass_layers':0.00,
+                'inter_block_layers_per_block':'[60]',
                 'final_layers':3,
                 'b_norm_or_dropout_last_layers':'bnorm',
                 'dropout_rate':'0.00',
@@ -69,6 +70,7 @@ if __name__ == '__main__':
                        --residual_bypass_dense_layers {hparams['residual_bypass_dense_layers']}{back_slash}
                        --b_norm_or_dropout_residual_bypass_layers {hparams['b_norm_or_dropout_residual_bypass_layers']}{back_slash}
                        --dropout_rate_for_bypass_layers {hparams['dropout_rate_for_bypass_layers']}{back_slash}
+                       --inter_block_layers_per_block {hparams['inter_block_layers_per_block']}{back_slash}
                        --final_layers {hparams['final_layers']}{back_slash}
                        --b_norm_or_dropout_last_layers {hparams['b_norm_or_dropout_last_layers']}{back_slash}
                        --dropout_rate {hparams['dropout_rate']}{back_slash}
