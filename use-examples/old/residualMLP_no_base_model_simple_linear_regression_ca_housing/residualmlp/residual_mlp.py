@@ -20,7 +20,6 @@ class ResidualMLP:
                       residual_bypass_dense_layers = list(), #
                       b_norm_or_dropout_residual_bypass_layers = 'dropout', #
                       dropout_rate_for_bypass_layers = .35, #
-                      inter_block_layers_per_block = list(),
                       b_norm_or_dropout_last_layers = 'dropout', # | 'bnorm'
                       dropout_rate = .2, #
                       activation = tf.keras.activations.relu, #
@@ -80,7 +79,6 @@ class ResidualMLP:
         self.b_norm_or_dropout_residual_bypass_layers =\
             b_norm_or_dropout_residual_bypass_layers
         self.dropout_rate_for_bypass_layers = dropout_rate_for_bypass_layers
-        self.inter_block_layers_per_block = inter_block_layers_per_block
         self.b_norm_or_dropout_last_layers = b_norm_or_dropout_last_layers
         self.dropout_rate  = dropout_rate
         self.activation = activation
@@ -108,14 +106,14 @@ class ResidualMLP:
             accuracy = tf.keras.metrics.Accuracy()
         if self.problem_type == 'classification' and\
                 self.number_of_classes > 1:
-            metrics = [tf.keras.metrics.TopKCategoricalAccuracy(
+            metrics = [ tf.keras.metrics.TopKCategoricalAccuracy(
                 k = k,
                 name=f'top_{k}_'
                 'categorical_'
                 'accuracy',
                 dtype=None)
                            for k in np.arange(1,self.number_of_classes)\
-                               if k < 10]
+                               if k < 6]
             metrics.append(precision)
             metrics.append(recall)
             metrics.append(accuracy)
@@ -146,16 +144,13 @@ class ResidualMLP:
         if self.flatten_after_base_model:
             tf.keras.layers.Flatten()(x)
         initializer = tf.keras.initializers.GlorotNormal()
-        for bl in np.arange(len(self.blocks)):
-            block = self.blocks[bl]
-            bypass_block = self.residual_bypass_dense_layers[bl]
-            
-            
+        for block, bypass_block in zip(self.blocks,
+                                       self.residual_bypass_dense_layers):
             x = tf.keras.layers.Dense(block[1],
                                       self.activation,
                                       kernel_initializer=initializer)(x)
             y = x
-            x = tf.keras.layers.BatchNormalization()(x)
+            x = tf.keras.layers.BatchNormalization()(x) 
             # x proceeds sequentially to the 
             # next Dense layer.
             
@@ -201,13 +196,10 @@ class ResidualMLP:
                 x = tf.keras.layers.BatchNormalization()(x)
     
             x = tf.keras.layers.Concatenate(axis=1)([x, y])
-            
-            if bl != np.arange(len(self.blocks)).max():
-                for inter_block_layer in self.inter_block_layers_per_block:
-                    x = tf.keras.layers.Dense(inter_block_layer,
-                                          self.activation,
-                                          kernel_initializer=initializer)(x)
-                    x = tf.keras.layers.BatchNormalization()(x)
+            x = tf.keras.layers.Dense(block[1] - block[2] * block[0],
+                                      self.activation,
+                                      kernel_initializer=initializer)(x)
+            x = tf.keras.layers.BatchNormalization()(x)
     
         for i in self.final_dense_layers:
             x = tf.keras.layers.Dense(i,
