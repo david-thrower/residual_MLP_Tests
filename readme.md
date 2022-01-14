@@ -31,7 +31,7 @@
     3. To build a ResidualMLP model:
         1. First make sure that the python package residualmlp is in the directory you are working in. This is found here https://github.com/david-thrower/residual_MLP_Tests/tree/main/new-api-as-a-class, just copy the directory residualmlp to the directory you are running your code or notebook in:  (until soon I will release this on pypi so you can install it using pip).  
         2. Import ResidualMLP: `from residualmlp.residual_mlp import ResidualMLP`
-        3. Instantiate a ResidualMLP obkect `model_builder = ResidualMLP(args)` This may look like:
+        3. Instantiate a ResidualMLP object `model_builder = ResidualMLP(args)` This may look like:
         ```python3
         {
         model_builder = ResidualMLP(problem_type = 'classification', #
