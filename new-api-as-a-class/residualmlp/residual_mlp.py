@@ -103,7 +103,7 @@ class ResidualMLP:
     # selected base model:
     def make_tandem_model(self):
         if self.problem_type == 'classification':
-            precision = tf.keras.metrics.Precision(), 
+            precision = tf.keras.metrics.Precision(),
             recall = tf.keras.metrics.Recall()
             accuracy = tf.keras.metrics.Accuracy()
         if self.problem_type == 'classification' and\
@@ -129,12 +129,7 @@ class ResidualMLP:
     
         inp = tf.keras.layers.Input(shape = self.input_shape) 
         # Start with input layer that fits. 
-        # The keras fucntional API will blow up appearently if
-        # there is not an explicit input layer 
-        # that coerces inputs as a specific size
-        # quite annoying if you ask me, but
-        # obviously Google didn't, so here 
-        # we are ...
+        # The keras fucntional API requires an explicit input layer
         if self.bw_images:
             x = self.grayscale_to_rgb(inp)
         else:
@@ -144,7 +139,7 @@ class ResidualMLP:
                                          self.base_model_input_shape[1])(x)
             x = self.base_model(x)
         if self.flatten_after_base_model:
-            tf.keras.layers.Flatten()(x)
+            x = tf.keras.layers.Flatten()(x)
         initializer = tf.keras.initializers.GlorotNormal()
         for bl in np.arange(len(self.blocks)):
             block = self.blocks[bl]
