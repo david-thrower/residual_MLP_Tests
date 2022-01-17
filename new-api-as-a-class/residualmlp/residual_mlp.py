@@ -1,42 +1,78 @@
+try:
+    import keras_tuner as kt
+except Exception as exc:
+    print("Importing Keras tuner appears to be unsuccesful. "
+          "keras tuner may need to be installed $ pip install -q -U "
+          "keras-tuner. The auto-ml features are disabled until this is "
+           "fixed, but ResidualMLP will work. A more detailed error is: "
+           f"{exc}")
 import tensorflow as tf
 import numpy as np
+import pandas as pd
 
 # Becomes a layer to convert BW images to RGB
 
 class ResidualMLP:
     
-    def __init__(self, problem_type = 'classification', #
-                      learning_rate = .0007, #
-                      input_shape = (32,32,3), #
-                      bw_images = False, #
-                      base_model = '', #
-                      base_model_input_shape = (600,600,3), #
-                      flatten_after_base_model = True, #
+    def __init__(self, problem_type = 'classification',
+                      learning_rate = .0007,
+                      minimum_learning_rate = 0.00007,
+                      maximum_learning_rate = 0.7,
+                      number_of_learning_rates_to_try = 5,
+                      input_shape = (32,32,3),
+                      bw_images = False,
+                      base_model = '',
+                      base_model_input_shape = (600,600,3),
+                      base_model_hyperparameters = {},
+                      flatten_after_base_model = True,
                           # 2D ARRAY: Each row: 
                           # [number_of_layers,
                           #  first_layer_neurons, 
                           #  decay_of_n_Dense_units_per_layer]
-                      blocks = [[5,400,50]], #
-                      residual_bypass_dense_layers = list(), #
-                      b_norm_or_dropout_residual_bypass_layers = 'dropout', #
-                      dropout_rate_for_bypass_layers = .35, #
+                      blocks = [[5,400,50]],
+                      minimum_number_of_blocks = 1,
+                      maximum_number_of_blocks = 7,
+                      minimum_number_of_layers_per_block = 1,
+                      maximum_number_of_layers_per_block = 7,
+                      minimum_neurons_per_block_layer = 1,
+                      maximum_neurons_per_block_layer = 7,
+                      minimum_neurons_per_block_layer_decay = 1,
+                      maximum_neurons_per_block_layer_decay = 7,
+                      residual_bypass_dense_layers = list(),
+                      b_norm_or_dropout_residual_bypass_layers = 'dropout',
+                      dropout_rate_for_bypass_layers = .35,
                       inter_block_layers_per_block = list(),
                       b_norm_or_dropout_last_layers = 'dropout', # | 'bnorm'
                       dropout_rate = .2, #
-                      activation = tf.keras.activations.relu, #
-                      final_dense_layers = [75,35], #
+                      activation = tf.keras.activations.relu,
+                      final_dense_layers = [75,35],
                       number_of_classes = 10, # 1 if a regression problem
-                      final_activation = tf.keras.activations.softmax, #
+                      final_activation = tf.keras.activations.softmax,
                       loss = tf.keras.losses.CategoricalCrossentropy(
-                          from_logits=False)): #
+                          from_logits=False)):
         self.problem_type = problem_type
         self.learning_rate = learning_rate
+        self.minimum_learning_rate = minimum_learning_rate
+        self.maximum_learning_rate = maximum_learning_rate
+        self.number_of_learning_rates_to_try = number_of_learning_rates_to_try
         self.input_shape = input_shape
         self.bw_images = bw_images
         self.base_model = base_model
         self.base_model_input_shape = base_model_input_shape
         self.flatten_after_base_model = flatten_after_base_model
         self.blocks = blocks
+        self.minimum_number_of_blocks = minimum_number_of_blocks
+        self.maximum_number_of_blocks = maximum_number_of_blocks
+        self.minimum_number_of_layers_per_block =\
+            minimum_number_of_layers_per_block
+        self.maximum_number_of_layers_per_block =\
+            maximum_number_of_layers_per_block
+        self.minimum_neurons_per_block_layer = minimum_neurons_per_block_layer
+        self.maximum_neurons_per_block_layer = maximum_neurons_per_block_layer
+        self.minimum_neurons_per_block_layer_decay =\
+            minimum_neurons_per_block_layer_decay
+        self.maximum_neurons_per_block_layer_decay =\
+            maximum_neurons_per_block_layer_decay
         # residual_bypass_dense_layers
         # Screen for nonsense combinations of the parameters 'blocks' and 
         # 'residual_bypass_dense_layers'
@@ -230,4 +266,211 @@ class ResidualMLP:
                          loss=self.loss, 
                          metrics=metrics)
         return modelo_final
+    
+    
+    def parse_block(self,number_of_blocks,
+                        layers_per_block,
+                        neurons_per_block_layer,
+                        neurons_per_block_layer_decay):
+        blocks_0 = []
+        for i in number_of_blocks:
+            block_0 = [layers_per_block,
+                       neurons_per_block_layer,
+                       neurons_per_block_layer_decay]
+            blocks_0.append(block_0)
+        return blocks_0
+    
+    def build_auto_residual_mlp(self,hp):
+        
+        self.learning_rate = hp.float(name='learning_rate',
+                                      min_value=self.minimum_learning_rate, 
+                                      max_value=self.maximum_learning_rate,
+                                      sampling='log')
+
+        permutations_of_blocks_array = np.array([[i,j,k,l]
+         for i in np.arange(self.minimum_number_of_blocks,
+                            self.maximum_number_of_blocks + 1)
+         for j in np.arange(self.minimum_number_of_layers_per_block,
+                            self.maximum_number_of_layers_per_block + 1)
+         for k in np.arange(self.minimum_neurons_per_block_layer,
+                            self.maximum_neurons_per_block_layer + 1)
+         for l in np.arange(self.minimum_neurons_per_block_layer_decay,
+                            self.maximum_neurons_per_block_layer_decay + 1)])
+        
+        permutations_of_blocks_df = pd.DataFrame(permutations_of_blocks_array)
+        permutations_of_blocks_df.cols = ['number_of_blocks',
+                                          'layers_per_block',
+                                          'neurons_per_block_layer',
+                                          'neurons_per_block_layer_decay']
+        print("All permutations:")
+        print(permutations_of_blocks_df)
+        
+        # Filter out any invalid permutations that would try creating Dense
+        # layers with 0 units or a negative number of units.
+        permutations_of_blocks_df['valid_block'] =\
+            permutations_of_blocks_df['neurons_per_block_layer'] >\
+            permutations_of_blocks_df["layers_per_block"] *\
+            permutations_of_blocks_df["neurons_per_block_layer_decay"]
+        valid_permutations_df =\
+            permutations_of_blocks_df.query("valid_block = True")\
+            .reset_index(drop=True)
+        print("Valid permutations")
+        print(valid_permutations_df)
+        
+        list_of_blocks_args = list()
+        for i in np.arange(valid_permutations_df.shape[0]):
+            blocks_arg = self.parse_block(
+                valid_permutations_df.loc[i]['number_of_blocks'],
+                valid_permutations_df.loc[i]['layers_per_block'],
+                valid_permutations_df.loc[i]['neurons_per_block_layer'],
+                valid_permutations_df.loc[i]['neurons_per_block_layer_decay'])
+            list_of_blocks_args.append(blocks_arg)
+        
+        valid_permutations_df['blocks'] = list_of_blocks_args
+        
+        print("Valid permutations with blocks column")
+        print(valid_permutations_df)
+ 
+        valid_permutations_df.sort_values(['layers_per_block',
+                                           'neurons_per_block_layer'],
+                                            ascending=True)\
+            .reset_index(drop=True)
+        
+        list_to_choose_blocks_option_from =\
+            np.arange(valid_permutations_df.shape[0])
+        blocks_index = hp.choice(name='blocks',
+                                 values=list_to_choose_blocks_option_from,
+                                 ordered=True)
+        self.blocks = valid_permutations_df.loc[blocks_index]['blocks'].values
+        
+        if self.problem_type == 'classification':
+            precision = tf.keras.metrics.Precision(),
+            recall = tf.keras.metrics.Recall()
+            accuracy = tf.keras.metrics.Accuracy()
+        if self.problem_type == 'classification' and\
+                self.number_of_classes > 1:
+            metrics = [tf.keras.metrics.TopKCategoricalAccuracy(
+                k = k,
+                name=f'top_{k}_'
+                'categorical_'
+                'accuracy',
+                dtype=None)
+                           for k in np.arange(1,self.number_of_classes)\
+                               if k < 10]
+            metrics.append(precision)
+            metrics.append(recall)
+            metrics.append(accuracy)
+        elif self.problem_type == 'classification' and\
+                self.number_of_classes == 1:    
+            metrics = [precision, recall, accuracy]
+        else:
+            rmse = tf.keras.metrics.RootMeanSquaredError()
+            mae = tf.keras.metrics.MeanAbsoluteError()
+            metrics = [rmse, mae]
+    
+        inp = tf.keras.layers.Input(shape = self.input_shape) 
+        # Start with input layer that fits. 
+        # The keras fucntional API requires an explicit input layer
+        if self.bw_images:
+            x = self.grayscale_to_rgb(inp)
+        else:
+            x = inp
+        if self.base_model != '':
+            x = tf.keras.layers.Resizing(self.base_model_input_shape[0],
+                                         self.base_model_input_shape[1])(x)
+            x = self.base_model(x)
+        if self.flatten_after_base_model:
+            x = tf.keras.layers.Flatten()(x)
+        initializer = tf.keras.initializers.GlorotNormal()
+        for bl in np.arange(len(self.blocks)):
+            block = self.blocks[bl]
+            bypass_block = self.residual_bypass_dense_layers[bl]
+            
+            
+            x = tf.keras.layers.Dense(block[1],
+                                      self.activation,
+                                      kernel_initializer=initializer)(x)
+            y = x
+            x = tf.keras.layers.BatchNormalization()(x)
+            # x proceeds sequentially to the 
+            # next Dense layer.
+            
+            if self.b_norm_or_dropout_residual_bypass_layers == 'dropout':
+                y = tf.keras.layers\
+                    .Dropout(self.dropout_rate_for_bypass_layers)(y)
+            elif self.b_norm_or_dropout_residual_bypass_layers == 'bnorm':
+                y = tf.keras.layers.BatchNormalization()(y)
+            else:
+                raise ValueError("The parameter: "
+                                 "'b_norm_or_dropout_residual_bypass_"
+                                 "layers'"
+                                 " must be left default '', or be "
+                                 "'dropout' or may be 'bnorm'.")
+            for bypass_layer in bypass_block:
+                y = tf.keras.layers.Dense(bypass_layer,
+                                          self.activation,
+                                          kernel_initializer=initializer)(y)
+                if self.b_norm_or_dropout_residual_bypass_layers == 'dropout':
+                    y = tf.keras.layers\
+                        .Dropout(self.dropout_rate_for_bypass_layers)(y)
+                elif self.b_norm_or_dropout_residual_bypass_layers == 'bnorm':
+                    y = tf.keras.layers.BatchNormalization()(y)
+                else:
+                    raise ValueError("The parameter: "
+                                     "'b_norm_or_dropout_residual_bypass_"
+                                     "layers' must be left default '', or be "
+                                     "'dropout' or may be 'bnorm'.")
+            # y does NOT proceed sequentially
+            # to the next layer. This bypasses 
+            # several layers and give a memory 
+            # that attenuates some of the 
+            # deleterious effects of a deeper 
+            # network and lets us capture more 
+            # complex interactions before 
+            # overfitting becomes an issue than 
+            # the textbook sequential multi - 
+            # layer perceptron ...
+            for j in np.arange(block[0]): 
+                x = tf.keras.layers.Dense(block[1] - block[2] * j,
+                                          self.activation,
+                                          kernel_initializer=initializer)(x) 
+                x = tf.keras.layers.BatchNormalization()(x)
+    
+            x = tf.keras.layers.Concatenate(axis=1)([x, y])
+            
+            if bl != np.arange(len(self.blocks)).max():
+                for inter_block_layer in self.inter_block_layers_per_block:
+                    x = tf.keras.layers.Dense(inter_block_layer,
+                                          self.activation,
+                                          kernel_initializer=initializer)(x)
+                    x = tf.keras.layers.BatchNormalization()(x)
+    
+        for i in self.final_dense_layers:
+            x = tf.keras.layers.Dense(i,
+                                      self.activation,
+                                      kernel_initializer=initializer)(x) 
+            if self.b_norm_or_dropout_last_layers == 'bnorm':
+                x = tf.keras.layers.BatchNormalization()(x)
+            elif self.b_norm_or_dropout_last_layers == 'dropout':
+                x = tf.keras.layers.Dropout(self.dropout_rate)(x)
+            else:
+                raise ValueError("For b_norm_or_dropout_last_layers, " 
+                                 "you must pick either 'dropout' or 'bnorm'")
+        out = tf.keras.layers.Dense(self.number_of_classes,
+                                    self.final_activation,
+                                    kernel_initializer=initializer)(x)
+    
+        # Declare the graph for our model ...
+        modelo_final = tf.keras.Model(inputs=inp,outputs = out)
+        
+        modelo_final\
+            .compile(optimizer=\
+                     tf.keras.optimizers.Adam(
+                         learning_rate=self.learning_rate, 
+                         clipnorm=1.0),
+                         loss=self.loss, 
+                         metrics=metrics)
+        return modelo_final
+        
+        
 
