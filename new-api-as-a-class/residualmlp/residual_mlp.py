@@ -404,25 +404,27 @@ class ResidualMLP:
                 [[bypass_layers_units] for _ in np.arange(len(self.blocks))]
         
         inter_block_layers_per_block_options =\
-            np.linspace(self.minimum_inter_block_layers_per_block,
-                        self.maximum_inter_block_layers_per_block,
-                        self.n_options_inter_block_layers_per_block,
-                        dtype=int) 
+            [int(i) for i in
+                np.linspace(self.minimum_inter_block_layers_per_block,
+                            self.maximum_inter_block_layers_per_block,
+                            self.n_options_inter_block_layers_per_block,
+                            dtype=int)]
         inter_block_layers_per_block_choice =\
             hp.Choice(name='inter_block_layers',
                       values=inter_block_layers_per_block_options,
                       ordered=True)
-        if inter_block_layers_per_block_choice == 0:
-            self.inter_block_layers_per_block = list()
-        else:
-            self.inter_block_layers_per_block =\
-                [inter_block_layers_per_block_choice] #Add for i in range max interblock layers...
+
+        self.inter_block_layers_per_block = list()
+        if inter_block_layers_per_block_choice > 1:
+            for i in range(len(self.blocks) -1):
+                self.inter_block_layers_per_block\
+                    .append(inter_block_layers_per_block_choice)
 
         final_dense_layers_options = \
-            np.linspace(self.minimum_final_dense_layers,
-                        self.maximum_final_dense_layers,
-                        self.n_options_final_dense_layers,
-                        dtype=int)
+            [int(i) for i in np.linspace(self.minimum_final_dense_layers,
+                                         self.maximum_final_dense_layers,
+                                         self.n_options_final_dense_layers,
+                                         dtype=int)]
         final_dense_layers_choice = hp.Choice(
                                             name='final_dense_layers',
                                             values=final_dense_layers_options,
@@ -437,10 +439,11 @@ class ResidualMLP:
                       values=['dropout','bnorm'],
                       ordered=False)
         dropout_rate_for_bypass_layers_choices =\
-            np.linspace(self.minimum_dropout_rate_for_bypass_layers,
+            [float(i) for i in
+                np.linspace(self.minimum_dropout_rate_for_bypass_layers,
                         self.maximim_dropout_rate_for_bypass_layers,
                         self.n_options_dropout_rate_for_bypass_layers,
-                        dtype=float)
+                        dtype=float)]
         self.dropout_rate_for_bypass_layers =\
             hp.Choice(name='dropout_rate_for_bypass_layers',
                       values=dropout_rate_for_bypass_layers_choices,
@@ -451,10 +454,11 @@ class ResidualMLP:
                                   values=['dropout','bnorm'],
                                   ordered=False)
         
-        dropout_rate_options = np.linspace(self.minimum_dropout_rate, 
-                                                self.maximum_dropout_rate,
-                                                self.n_options_dropout_rate,
-                                                dtype=float)
+        dropout_rate_options = [float(i) for i in 
+                                np.linspace(self.minimum_dropout_rate, 
+                                            self.maximum_dropout_rate,
+                                            self.n_options_dropout_rate,
+                                            dtype=float)]
         self.dropout_rate = hp.Choice(name='dropout_rate',
                                       values=dropout_rate_options,
                                       ordered=True)
