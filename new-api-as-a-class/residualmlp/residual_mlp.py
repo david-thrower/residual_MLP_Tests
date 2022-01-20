@@ -9,6 +9,7 @@ except Exception as exc:
 import tensorflow as tf
 import numpy as np
 import pandas as pd
+import pendulum
 
 # Becomes a layer to convert BW images to RGB
 
@@ -34,18 +35,31 @@ class ResidualMLP:
                       maximum_number_of_blocks = 7,
                       minimum_number_of_layers_per_block = 1,
                       maximum_number_of_layers_per_block = 7,
-                      minimum_neurons_per_block_layer = 1,
-                      maximum_neurons_per_block_layer = 7,
+                      minimum_neurons_per_block_layer = 3,
+                      maximum_neurons_per_block_layer = 30,
+                      n_options_of_neurons_per_layer_to_try = 7,
                       minimum_neurons_per_block_layer_decay = 1,
                       maximum_neurons_per_block_layer_decay = 7,
                       residual_bypass_dense_layers = list(),
                       b_norm_or_dropout_residual_bypass_layers = 'dropout',
                       dropout_rate_for_bypass_layers = .35,
+                      minimum_dropout_rate_for_bypass_layers = 0.01,
+                      maximim_dropout_rate_for_bypass_layers = 0.7,
+                      n_options_dropout_rate_for_bypass_layers = 7,
                       inter_block_layers_per_block = list(),
+                      minimum_inter_block_layers_per_block = 3,
+                      maximum_inter_block_layers_per_block = 30,
+                      n_options_inter_block_layers_per_block = 7,
                       b_norm_or_dropout_last_layers = 'dropout', # | 'bnorm'
                       dropout_rate = .2, #
+                      minimum_dropout_rate = 0.01,
+                      maximum_dropout_rate = 0.7,
+                      n_options_dropout_rate = 7,
                       activation = tf.keras.activations.relu,
                       final_dense_layers = [75,35],
+                      minimum_final_dense_layers = 0,
+                      maximum_final_dense_layers = 30,
+                      n_options_final_dense_layers = 2,
                       number_of_classes = 10, # 1 if a regression problem
                       final_activation = tf.keras.activations.softmax,
                       loss = tf.keras.losses.CategoricalCrossentropy(
@@ -69,6 +83,8 @@ class ResidualMLP:
             maximum_number_of_layers_per_block
         self.minimum_neurons_per_block_layer = minimum_neurons_per_block_layer
         self.maximum_neurons_per_block_layer = maximum_neurons_per_block_layer
+        self.n_options_of_neurons_per_layer_to_try =\
+            n_options_of_neurons_per_layer_to_try
         self.minimum_neurons_per_block_layer_decay =\
             minimum_neurons_per_block_layer_decay
         self.maximum_neurons_per_block_layer_decay =\
@@ -116,11 +132,29 @@ class ResidualMLP:
         self.b_norm_or_dropout_residual_bypass_layers =\
             b_norm_or_dropout_residual_bypass_layers
         self.dropout_rate_for_bypass_layers = dropout_rate_for_bypass_layers
+        self.minimum_dropout_rate_for_bypass_layers =\
+            minimum_dropout_rate_for_bypass_layers
+        self.maximim_dropout_rate_for_bypass_layers =\
+            maximim_dropout_rate_for_bypass_layers
+        self.n_options_dropout_rate_for_bypass_layers =\
+            n_options_dropout_rate_for_bypass_layers
         self.inter_block_layers_per_block = inter_block_layers_per_block
+        self.minimum_inter_block_layers_per_block =\
+            minimum_inter_block_layers_per_block
+        self.maximum_inter_block_layers_per_block =\
+            maximum_inter_block_layers_per_block
+        self.n_options_inter_block_layers_per_block =\
+            n_options_inter_block_layers_per_block
         self.b_norm_or_dropout_last_layers = b_norm_or_dropout_last_layers
         self.dropout_rate  = dropout_rate
+        self.minimum_dropout_rate = minimum_dropout_rate
+        self.maximum_dropout_rate = maximum_dropout_rate
+        self.n_options_dropout_rate = n_options_dropout_rate
         self.activation = activation
         self.final_dense_layers = final_dense_layers
+        self.minimum_final_dense_layers = minimum_final_dense_layers
+        self.maximum_final_dense_layers = maximum_final_dense_layers
+        self.n_options_final_dense_layers = n_options_final_dense_layers
         self.number_of_classes = number_of_classes
         self.final_activation = final_activation
         self.loss = loss
@@ -292,8 +326,10 @@ class ResidualMLP:
                             self.maximum_number_of_blocks + 1)
          for j in np.arange(self.minimum_number_of_layers_per_block,
                             self.maximum_number_of_layers_per_block + 1)
-         for k in np.arange(self.minimum_neurons_per_block_layer,
-                            self.maximum_neurons_per_block_layer + 1)
+         for k in np.linspace(self.minimum_neurons_per_block_layer,
+                              self.maximum_neurons_per_block_layer, 
+                              self.n_options_of_neurons_per_layer_to_try,
+                              dtype=int)
          for l in np.arange(self.minimum_neurons_per_block_layer_decay,
                             self.maximum_neurons_per_block_layer_decay + 1)])
         
@@ -336,6 +372,10 @@ class ResidualMLP:
                                             ascending=True)\
             .reset_index(drop=True)
         
+        # for reeference, the list of block options is saved as a csv
+        date = pendulum.now().__str__()[:16].replace("T","_").replace(":","_")
+        valid_permutations_df.to_csv(f'{date}_blocks_permutations.csv')
+        
         list_to_choose_blocks_option_from =\
             [int(i) for i in np.arange(valid_permutations_df.shape[0])]
         blocks_index_chosen = hp.Choice(
@@ -346,18 +386,79 @@ class ResidualMLP:
         
         self.blocks = valid_permutations_df.loc[blocks_index_chosen]['blocks']
         print(self.blocks)
-        print(type(self.blocks))
         
         bypass_layers_units = hp.Choice(name='bypass_layers_units',
-                                       values=[int(i) 
-                                               for i in np.arange(
-                                                   self.maximum_neurons_per_block_layer)],
-                                       ordered=True)
-        if bypass_layers_units == 0:
-            self.residual_bypass_dense_layers = [list() for _ in np.arange(len(self.blocks))]
-        else:
-            self.residual_bypass_dense_layers = [[bypass_layers_units] for _ in np.arange(len(self.blocks))]
+                        values=[int(i) 
+                                for i in np.linspace(
+                                self.minimum_neurons_per_block_layer ,
+                                self.maximum_neurons_per_block_layer,
+                                self.n_options_of_neurons_per_layer_to_try,
+                                dtype=int)],
+                        ordered=True)
         
+        if bypass_layers_units == 0:
+            self.residual_bypass_dense_layers =\
+                [list() for _ in np.arange(len(self.blocks))]
+        else:
+            self.residual_bypass_dense_layers =\
+                [[bypass_layers_units] for _ in np.arange(len(self.blocks))]
+        
+        inter_block_layers_per_block_options =\
+            np.linspace(self.minimum_inter_block_layers_per_block,
+                        self.maximum_inter_block_layers_per_block,
+                        self.n_options_inter_block_layers_per_block,
+                        dtype=int) 
+        inter_block_layers_per_block_choice =\
+            hp.Choice(name='inter_block_layers',
+                      values=inter_block_layers_per_block_options,
+                      ordered=True)
+        if inter_block_layers_per_block_choice == 0:
+            self.inter_block_layers_per_block = list()
+        else:
+            self.inter_block_layers_per_block =\
+                [inter_block_layers_per_block_choice] #Add for i in range max interblock layers...
+
+        final_dense_layers_options = \
+            np.linspace(self.minimum_final_dense_layers,
+                        self.maximum_final_dense_layers,
+                        self.n_options_final_dense_layers,
+                        dtype=int)
+        final_dense_layers_choice = hp.Choice(
+                                            name='final_dense_layers',
+                                            values=final_dense_layers_options,
+                                            ordered=True)
+        if final_dense_layers_choice == 0:
+            self.final_dense_layers = []
+        else:
+            self.final_dense_layers = [final_dense_layers_choice]
+
+        self.b_norm_or_dropout_residual_bypass_layers =\
+            hp.Choice(name="b_norm_or_dropout_residual_bypass_layers",
+                      values=['dropout','bnorm'],
+                      ordered=False)
+        dropout_rate_for_bypass_layers_choices =\
+            np.linspace(self.minimum_dropout_rate_for_bypass_layers,
+                        self.maximim_dropout_rate_for_bypass_layers,
+                        self.n_options_dropout_rate_for_bypass_layers,
+                        dtype=float)
+        self.dropout_rate_for_bypass_layers =\
+            hp.Choice(name='dropout_rate_for_bypass_layers',
+                      values=dropout_rate_for_bypass_layers_choices,
+                      ordered=True)
+
+        self.b_norm_or_dropout_last_layers =\
+                        hp.Choice(name='b_norm_or_dropout_last_layers',
+                                  values=['dropout','bnorm'],
+                                  ordered=False)
+        
+        dropout_rate_options = np.linspace(self.minimum_dropout_rate, 
+                                                self.maximum_dropout_rate,
+                                                self.n_options_dropout_rate,
+                                                dtype=float)
+        self.dropout_rate = hp.Choice(name='dropout_rate',
+                                      values=dropout_rate_options,
+                                      ordered=True)
+
         if self.problem_type == 'classification':
             precision = tf.keras.metrics.Precision(),
             recall = tf.keras.metrics.Recall()
