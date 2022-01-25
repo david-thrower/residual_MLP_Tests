@@ -1,20 +1,136 @@
-#  Residual Multi Layer Perceptron build and fit engine written in python 10.0.0 using Tensorflow 2.6 functional API. 
-## This is useful for building residual MLP models both as stand alone residual MLP models and as tandem [convolutional | vision transformer | etc]->Residual MLP models where the resudual MLP aspect of the model is used to augment the performance of a commonly used base model for transfer learning (e.g. EffieientNet/ResnetNet/etc.).
-
-1. Purpose: This is a core engine for recursively building, compiling, and testing Residual Multi Layer Perceptron models. This is meant to enable neural architecture search in this non-standard and non-sequential MLP architecture. This system abstracts away most of the tedious work of building residual multi layer perceptron models and reduces it to a selection of any suitable permutations of this neural architecture constructor's hyperparameters.
-2. What is a residual multi layer perceptron? It is a non-sequential multi-layer-perceptron where as with all multi layer perceptrons, there is a block of sequential Dense layers (basically the layers we see below in blue), however, unlike a standard sequential multi - layer - perceptron, there is also a "residual tensor" (seen below in the layers in yellow) which forwards a duplicate of the input to this block of dense layers forward, bypassing the block of dense layers. At the output end of the block of dense layers, the residual tensor is concatenated with the output of the block of sequential dense layers before proceeding to the next block. This creates a memory effect and importantly, attenuates some of the deleterious effects introduced by very deep networks, such as overfitting, [exploding | valishing] gradients, and internal covariate shift. 
+#  Residual Multi Layer Perceptron neural architecure and hyperparameter search algorithym written in python 10.0.0 using Tensorflow 2.6 functional API. 
+## This is useful for building residual MLP models both as stand alone residual MLP models and as tandem [convolutional | vision transformer | etc]->ResidualMLP tarnsfer learning models where the resudual MLP aspect of the model is used to augment the performance of a commonly used base model for transfer learning (e.g. EffieientNet/ResnetNet/etc.).
+1. Purpose: This is a core engine for recursively building, compiling, and testing Residual Multi Layer Perceptron models. This is meant to enable neural architecture search in this non-standard and non-sequential MLP architecture. This system abstracts away most of the tedious work of building residual multi layer perceptron models and reduces it to a selection of any suitable permutations of this neural architecture constructor's hyperparameters or using keras tuner to find the optimal neural architecture and hyperparameters.
+2. What is a residual multi layer perceptron? It is a non-sequential multi-layer-perceptron where as with all multi layer perceptrons, there is a block of sequential Dense layers (basically the layers we see below in blue), however, unlike a standard sequential multi - layer - perceptron, there is also a "residual bypass path" (seen below in the layers in yellow) which forwards a duplicate of the input to this block of dense layers forward, bypassing the block of dense layers. At the output end of the block of dense layers, the duplicate copy of the input to the block of Dense layers is concatenated with the output of the block of sequential dense layers before proceeding to the next block. This creates a memory effect and importantly, attenuates some of the deleterious effects introduced by very deep networks, such as overfitting, [exploding | valishing] gradients, and particularly, internal covariate shift. 
    ![/assets/residual_mlp_summary.drawio.png](/assets/residual_mlp_summary.drawio.png)
 3. Why use a residual multi layer perceptron model?
-    1. Better performance on small data sets.
+    1. Better performance, especially on small data sets.
     2. Residual MLPs enable greater model complexity and insanely deep neural network depth before overfitting, valishing and exploding gradients, and internal covariate shift become the model complexity limiting factors.
     3. Better precision, recall, and other performance metrics with less training data and far fewer epochs.
+    4. They are a perfect to use to augment any suitable pre-trained base model and create an effective transfer learning model. With this API, you can easily build and compile a tandem model which pipes the output of any suitable keras model into a ResidualMLP model which should give you State Of The Art (SOTA) performance or near SOTA performance with regard to accuracy, precision, top-k, RMSE (respectively). To do this:
+    	1. Instantiate an instance of the ResidualMLP class.
+    		1. Set the argument "problem_type" to 'classification' or 'regression' respectively.
+    		2. Set the argument "base_model" to any suitable Keras model instance (e.g. an EfficientNetB7 that you pulled from keras applications - https://keras.io/api/applications/efficientnet/, removed the final Dense layer, and set the last conv2d layer to trainable). If you are making a simple ResidualMLP model that is not a tandem model, set base_model to empty string "".
+    		3. Set the argument "input_shape" to the shape of your data.
+    		4. Set the argument "base_model_input_shape" to the shape which your base model expects (or the shape of your data if it does not require a specific shape). If base_model is set to empty string "", then this param is ignored.
+    		5. Set the argument "number_of_classes":
+    			1. For simple linear regression and binary classification, set this to 1.
+    			2. For multi class classification, set this to the number of classes.
+    		6. If you are not working on a multi-class classification problem, set the argument "final_activation" to a suitable final layer activation for the problem your model serves, (e.g. tf.keras.activations.sigmoid). For linear regression, set this to None. For multi-class classification, you may leave this default, unless you wanted to use a different activation than softmax.
+    		7.  If you are not working on a multi-class classification problem, set the argument "loss" to a suitable loss function for your problem (e.g. tf.keras.losses.BinaryCrossentropy). For multi-class classification, you may leave this as default, because this defaults to categorical cross-entropy, unless fo course you wanted to use a different loss function. Example:
+    		
+    		```python3
+    		{
+    		
+    		from residualmlp.residual_mlp import ResidualMLP
+    		
+    		res_mlp_model_maker = ResidualMLP(problem_type = 'classification',
+				    		  base_model = previously_instantiated_EfficientNetB7_instance,
+				    		  input_shape = (32,32,3),
+				    		  base_model_input_shape = (600,600,3),
+				    		  number_of_classes=10)
+    		
+    		}
+    		```
+    	2. Have the api buld your model:
+    		1. Option 1: Use Keras Tuner find an optimal neural architecture and hyperparameter state for you:
+    			1. Pass your instance of ResidualMLP.build_auto_residual_mlp() method as an argument to a Keras Tuner instance. I recommend using the Hyperband() tuner class.
+    			```python3
+    			{
+    			
+    			import keras_tuner as kt
+    			
+    			tuner = kt.Hyperband(
+			    res_mlp_model_maker.build_auto_residual_mlp,
+			    objective='val_loss',
+			    max_epochs = 30,
+			    hyperband_iterations = 2)
+			    
+    			}
+    			```
+    			
+    			2. Call the tuner's .search() method. Watch, wait ...  Example:
+    			
+    			```python3
+    			{
+    			
+    			# Set up the logs directory, tensorboard callback ...
+    			
+    			date = pendulum.now().__str__()[:16].replace("T","_").replace(":","_")
+    			
+    			RESULTS_DIR = f'cifar10_{date}_test_run'
+    			PATIENCE = 10
+    			PATIENCE_MIN_DELTA = 0.00001
+    			BATCH_SIZE = 300
+    			EPOCHS = 100
+    			
+    			logdir = os.path.join("logs", RESULTS_DIR + "_TB")
+    			tensorboard_callback = tf.keras.callbacks.TensorBoard(logdir, histogram_freq=1)
+    			
+    			# call the tuner instance's search method
+    			tuner.search(x=x_train,
+				     y=y_train,
+				     epochs=EPOCHS,
+				     batch_size=BATCH_SIZE, 
+				     callbacks=[
+					    tf.keras.callbacks.EarlyStopping(
+						monitor="val_loss",
+						patience=PATIENCE,
+						min_delta=PATIENCE_MIN_DELTA,
+						restore_best_weights=True,
+					    ),
+					    tensorboard_callback,
+					],
+				     validation_split=0.3)
+    			}
+    			```
+    			
+    			3. (Optional) Call your tuner instance's .results_summary(num_trials=1) method to get a printout of the best hyperparameter settings. Or num_trials=5 to get the 5 best combinations of hyperparameter settings ...
+    			```python3
+    			{
+    			tuner..results_summary(num_trials=1)
+    			}
+    			```
+    			4. Retreive the best model (call your Keras Tuner instance's .get_best_models(num_models=1) method, and extract the first item from the list. This should be a Keras model object. Continue training / validating the model and productionalize it. Alternatively you can get a printout of the optimal hyperparameter settings by calling your Keras Tuner instance's tuner.results_summary(num_trials=1) method and manually create and fit the model from option 2 below.
+    			   ```python3
+    			   {
+    			   best_model = tuner.get_best_models(num_models=1)[0]
+    			   best_model.evaluate(x_test)
+    			   }
+    			   ```
+    		2. Option2 (or follow - up for option 1 to re-create the optimal model found by option 1):
+    			1. Instantiate a ResidualMLP instance, setting the hyperparameters to the optimal settings. Refer to the API reference below. Also, for the parameter "blocks", refer to the CSV that was generated when you ran the tuner. The value listed as the optimal value for the hyperparameter "blocks" on the printout from .results_summary() is the row number for the blocks option determined to be optimal (the column with no label immediately left of the column "number_of_blocks"). Find the row matching this number. On this row, find the cell for the column "blocks". When you instantiate the ResidualMLP object, set the parameter "blocks" as the 2D list object listed here in the Blocks column for the row that was listed as best.
+    			```python3
+    			{
+    			model_maker = ResidualMLP(
+    				# same problem_type, input_shape, ... final layer activation and loss  ...
+	    			# ... [params = values listed on tuner.results_summary's printout] 
+	    			blocks = [[3, 18, 4], [3, 18, 4]],
+	    			# ... [more params = more values listed on tuner.results_summary's printout])
+    			}
+    			```
+    			2. Call the .make_tandem_model() method which will return an untrained keras model object with the hyperparameters and neural architecture selected. Fit this as you would any other Keras model.
+    			```python3
+    			{
+ 
+    			optimal_model = model_maker.make_tandem_model()
+    			optimal_model.fit(x=x_train,
+    			                  y=y_train,
+    			                  epochs=EPOCHS,
+    			                  batch_size=BATCH_SIZE,
+    			                  calbacks = [...],
+    			                  validation_split=0.3)
+ 
+    			}
+    			
+    			optimal_model.evaluate(x_test)
+    			```
 4. Are there any drawbacks with using a residual MLP model?
-    1. They are a little computationallly expensive on an epoch - by epoch basis. However considering that this model architecture does enable great performance after training on considerably smaller data sets and for far fewer epochs, they do make up for this and then some.
-    2. Although they can train quickly, for the time they are training, they do need larger hardware configurations consistent with the scale of their model complexity in order to complete training successfully. For example, when training a models on a subset of the CIFAR10 dataset, using the pre-trained EfficientNetB7 (having only the last conv2d layer set to trainable and the output of layers[-3] diverted into the input layer of a de-novo ResidualMLP model with optimal residual MLP neural network architecture hyperparameter settings for this problem), I found it will usually exhaust the RAM on hardware having 45GB of RAM, unless it is run on a container allocated with at least 2 A4000 GPUs. With this said, it was trained on a subset of only 10% of the training set minus a 30% validation split (trained on 3500 training images with 1500 validation images). This reached 89.6% top-1-val-accuracy at only 33 epochs, with 1 hour, 3 min, and 35 sec of training. Also, this specific case of an EfficientNetB7-> 14-layer-residual-MLP is by design an extreme case intended to pressure test this architecture and neural architecture automation. Most residual MLP applications should consume considerably less resources, but still more than the garden variety small sequential MPL model. This can make some jobs not financially worth the cost of training them. However, for most training jobs that have failed due to small sample size / not enough data (the niche of this model architecture), this may be an ideal overall algorithm for your business problem.
+    1. They are a little more complex and somewhat more computationally expensive than a standard multi layer perceptron on an epoch - by epoch basis. However considering that this model architecture does enable great performance after training on considerably smaller data sets for far fewer epochs in many cases, they still may be more efficient.
 5. Use example:
     Under construction... (a more user friendly example is forthcoming).
     1. VisionTransformer->ResidualMLP model:
-        1. The VisionTransformer base model used her is forked from Khalid Salama's work here: https://keras.io/examples/vision/image_classification_with_vision_transformer/
+        1. The VisionTransformer base model used her is forked from Khalid Salama's work found here: https://keras.io/examples/vision/image_classification_with_vision_transformer/
         2. With the removal of the training MLP and a reduction of the number of transformer_layers, you have a base model amenable to serve as a base model for a tandem VisionTransformer->ResidualMLP model.
         3. The construction of the VIT - ResidualMLP model is demonstrated here https://github.com/david-thrower/residual_MLP_Tests/blob/main/use-examples/VisionTransformer-ResidualMLP/vit-ResidualMLP-image-classifier.ipynb. This is a proof of concept, but hopefully with some hyperparameter optimization, we can release a new state of the art model. 
     2. Transfer learning on EfficientNetB7, previously trained on ImageNet, augmented with a 14 layer residual MLP). These are all components of the example. task_trigger.py and task.py are the main files. Unfortunately, with this generating several MB of logs and training for ~ an hour, it was not practical to run this in a Jupyter notebook, but here is the cascade of the training pipeline for this task: From the shell: 1. the shell command `python3 task_trigger.py` generates and runs run_2021-12-27_07-34_job.sh. 2. run_2021-12-27_07-34_job.sh runs task.py with the selected arguments. Lastly, task.py imports and uses the package residualmlp, as well as the training data and base model. These are the files below:
@@ -35,7 +151,7 @@
         ```python3
         {
         model_builder = ResidualMLP(problem_type = 'classification', #
-                      learning_rate = .0007, #
+                      learning_rate = .0007, # Manually setting using ResidualMLP.make_tandem_model()
                       input_shape = (32, 32, 3), #(32,32,3), #
                       bw_images = False, #
                       base_model = base_vit_model, #
@@ -65,20 +181,44 @@
         ```
         5. Train the model using its .fit() method as you would with any Keras model.
         6.  Arguments:
-            1. learning_rate: The learning rate for the optimizer.
-            2. input_shape: The input shape for the model as a whole, In other words, the shape of one observation in your data. 
-            3. base_model: If you were building a tandem model, starting with a pre-trained base model and passing the output of that model to the residual MLP we are building, then you would pass in that keras model object (e.g. an instantiated EfficientNetB7 model that you pulled from Kerras Applications and removed the flinal Dense layer or a BERT text embedding puleld from Tensorflow Hub.). If you are building a stand - alone ResidualMLP model with no base model feeding into it, base_model should be set to empty string '':
-            4. base_model_input_shape: If you are using a base model with a different input shape than your data and your data can be re-scaled (e.g. images that are a different size then the input layer on your base model), you would enter the input shape expected by the base model here, and the model built by make_tandem_model() will automatically insert a rescaling layer before between your input layer and your base model. For example, if you have training / test images of shape (32,32,3) and were using EfficientNet, pretrained on imagenet from keras applications having an input shape of (600,600,3), as your base_model, you would set the parameter 'base_model_input_shape' to (600,600,3).
-            5. flatten_after_base_model: Whether or not to put a Flatten layer before the model send your data through the residual multi layer perceptron (often used when base model outputs images or other 2D / 3D / nD tensors). This is usually set to True if you have a Conv2d layer as the last layer of your base model or otherwise have any data that will pass to your residualMLP model that is not a rank 1 tensor. Settign it to true will coerce the data being fed into your residualMLP model to a rank tensor. If your model raises an exception from the Concat layer(s) in the residualMLP model, this is a sign that you may need to set this parameter to True.
-            6. blocks: A 2d array. Each ith nested array will create a residualMLP block. See the diagram above for a visual of what it wil build. In each ith nested 1D array, you will find 3 positive integers (except l which can be positive or may be 0): j,k,l (from left to right). The positive integer j on the left of each nested array gives you control of how many Dense layers that this block will consist of. The second positive integer, k sets the number of Dense units in the first layer of the block. The third [0 or positive integer] l is how many LESS Dense units each succesive layer in the block will consist of than its predecessor. There is one additional obvious rule that the product of the first and third numbers, j and l must be < k, the second number, otherwise, you are asking the API to add some layer(s) with O Dense units or a negative number of Dense units. This will of course raise an exception and make you feel as embarassed as I did the first time I did this 😳. As a reminder, you must be concious of this when trying to run an auto-ml algorithym or running a gridsearch over permutations of options for blocks. A try .. except ... or better yet, a pre-screening of these permutations will be needed.
-            7. residual_bypass_dense_layers: Inserts (a) Dense layer(s) in the residual bypass path (This is the yellow path on the right in the diagram above.). If this is left as the default of '', then there will be no blocks in any of the residual bypass paths. If you do set this, there must be one nested list of positive integers for each Each block (same number of nested 1D arrays as the hyperparameter blocks). Each ith nested 1d array would control the Dense layers in the residual bypass for the ith residual block. One layer will be inserted for each positive integer in the nested list and each layer will have the number of units as the integer.  You may add layers to one blocks's bypass and not the other using an empty lsit for the block you don't want to have a Dense unit on its residual bypass path by doing something like this: [[],[5]] The first nested 1d array this will insert a Dense layer i units in the residual bypass of residual Block 1 for each number in that 1D array (in this example none). The second nested array will insert i units in the resisual bypass of block 2 for each number in the array (in this example, one Desnse layer with 5 units - Dense(5,...)) and so forth.
-            8. b_norm_or_dropout_residual_bypass_layers: You may insert BatchNormalization or dropout layers after each layer of the residual bypass. Options: Default "dropout" | "bnorm".
-            9. dropout_rate_for_bypass_layers: The dropout rate for the dropout laters in the RESIDUAL BYPASSES (ignored if B_NORM_OR_DROPOUT_RESIDUAL_BYPASS_LAYERS is set to 'bnorm'). This usually performs best as dropout and often with a higher DROPOUT_RATE_FOR_BYPASS_LAYERS (e.g. 25% or gerater).
-            10. inter_block_layers_per_block: A 1d array of positive integers. Each ith positive integer adds one Dense layer with i units in each break between residualMLP blocks.
-            11. b_norm_or_dropout_last_layers: After all last residual block, the hyperparameter FINAL_DENSE_LAYERS allows you to add a series (or just one) Dense layer(s). The hyperparameter b_norm_or_dropout_last_layers controls whether there will be a Dropout or BatchNormalization layer after each of these layer(s). This defaults to 'dropout' but can be set to 'bnorm'. It seems that about 60% of the time, dropout with the right dropout_rate will perform best, but be advised that these layers are more apt to internal covariate shift than the residual bypass layers. You amy want to experiment with both.
-            12. dropout_rate: The dropout rate for the dropout layers after each final Dense layer inserted after the last residualMLP block by the parameter
-            13. final_dense_layers: A 1d array of positive integers: Each ith positive integer will insert a Dense layer after the last ResidualMLP block.
-            14. number_of_classes = how many Dense units the final layer of the network should consist of / also the number of classes in your labels. For example, a simple linear regression model would have this parameter set to 1. So would a binary logistic regression problem. For a multi - class - classification problem, it would be the number of classes, eg 10 for a classification problem where there are 10 possible classes.
+            1. learning_rate: float: defaults to .0007: The learning rate for the optimizer. Only used if manually setting hyperparameters and neural architecture using ResidualMLP.make_tandem_model().
+            2. minimum_learning_rate, float, defaults to 7e-5: The minimum learning rate to be tried if automatically setting the hyperparameters and neural architecture using ResidualMLP.build_auto_residual_mlp with keras tuner. This can usually be left as default.
+            3. maximum_learning_rate, float, defaults to 0.7, Only used if you are automatically setting hyperparameters and neural architecture
+            4. number_of_learning_rates_to_try, int, defaults to 7: Only used if you are automatically setting hyperparameters and neural architecture
+            5. input_shape: The input shape for the model as a whole, In other words, the shape of one observation in your data. 
+            6. base_model: If you were building a tandem model, starting with a pre-trained base model and passing the output of that model to the residual MLP we are building, then you would pass in that keras model object (e.g. an instantiated EfficientNetB7 model that you pulled from Kerras Applications and removed the flinal Dense layer or a BERT text embedding puleld from Tensorflow Hub.). If you are building a stand - alone ResidualMLP model with no base model feeding into it, base_model should be set to empty string '':
+            7. base_model_input_shape: If you are using a base model with a different input shape than your data and your data can be re-scaled (e.g. images that are a different size then the input layer on your base model), you would enter the input shape expected by the base model here, and the model built by make_tandem_model() will automatically insert a rescaling layer before between your input layer and your base model. For example, if you have training / test images of shape (32,32,3) and were using EfficientNet, pretrained on imagenet from keras applications having an input shape of (600,600,3), as your base_model, you would set the parameter 'base_model_input_shape' to (600,600,3).
+            8. flatten_after_base_model: Whether or not to put a Flatten layer before the model send your data through the residual multi layer perceptron (often used when base model outputs images or other 2D / 3D / nD tensors). This is usually set to True if you have a Conv2d layer as the last layer of your base model or otherwise have any data that will pass to your residualMLP model that is not a rank 1 tensor. Settign it to true will coerce the data being fed into your residualMLP model to a rank tensor. If your model raises an exception from the Concat layer(s) in the residualMLP model, this is a sign that you may need to set this parameter to True.
+            9. blocks: A 2d array. Each ith nested array will create a residualMLP block. See the diagram above for a visual of what it wil build. In each ith nested 1D array, you will find 3 positive integers (except l which can be positive or may be 0): j,k,l (from left to right). The positive integer j on the left of each nested array gives you control of how many Dense layers that this block will consist of. The second positive integer, k sets the number of Dense units in the first layer of the block. The third [0 or positive integer] l is how many LESS Dense units each succesive layer in the block will consist of than its predecessor. There is one additional obvious rule that the product of the first and third numbers, j and l must be < k, the second number, otherwise, you are asking the API to add some layer(s) with O Dense units or a negative number of Dense units. This will of course raise an exception and make you feel as embarassed as I did the first time I did this 😳. As a reminder, you must be concious of this when trying to run an auto-ml algorithym or running a gridsearch over permutations of options for blocks. A try .. except ... or better yet, a pre-screening of these permutations will be needed.
+            10. minimum_number_of_blocks, int, defaults to 1: The minimum number of residul blocks to try. Only used if you are automatically setting hyperparameters and neural architecture.
+            11. maximum_number_of_blocks, int, defaults to 7, The maximum number of residul blocks to try. Only used if you are automatically setting hyperparameters and neural architecture.
+            12. minimum_number_of_layers_per_block, int, defaults to 1, The minimum number of layers per residual block (j) to be tried. Only used if you are automatically setting hyperparameters and neural architecture.
+            13. maximum_number_of_layers_per_block, int, defaults to 7, The maximum number of layers per residual block (j) to be tried. Only used if you are automatically setting hyperparameters and neural architecture.
+            14. minimum_neurons_per_block_layer, int, defaults to 3, The minimum number of neurons (k) to be tried in the residual block's Dense layers to be tried. Only used if you are automatically setting hyperparameters and neural architecture.
+            15. maximum_neurons_per_block_layer, int, defaults to 30, The maximum number of neurons (k) to be tried in the residual block's Dense layers to be tried. Only used if you are automatically setting hyperparameters and neural architecture.
+            16. n_options_of_neurons_per_layer_to_try, int, defaults to 7, How many options for neurons_per_block_layer to try (how many different k values to try). Only used if you are automatically setting hyperparameters and neural architecture.
+            17. minimum_neurons_per_block_layer_decay, int, defaults to 1, The minimum number of how many fewer neurons will be in each subsequent layer than its predecessor within a block (l). Only used if you are automatically setting hyperparameters and neural architecture.
+            18. maximum_neurons_per_block_layer_decay, int, defaults to 7, The maximum number of how many fewer neurons will be in each subsequent layer than its predecessor within a block (l). Only used if you are automatically setting hyperparameters and neural architecture.
+            19. residual_bypass_dense_layers: Inserts (a) Dense layer(s) in the residual bypass path (This is the yellow path on the right in the diagram above.). If this is left as the default of '', then there will be no blocks in any of the residual bypass paths. If you do set this, there must be one nested list of positive integers for each Each block (same number of nested 1D arrays as the hyperparameter blocks). Each ith nested 1d array would control the Dense layers in the residual bypass for the ith residual block. One layer will be inserted for each positive integer in the nested list and each layer will have the number of units as the integer.  You may add layers to one blocks's bypass and not the other using an empty lsit for the block you don't want to have a Dense unit on its residual bypass path by doing something like this: [[],[5]] The first nested 1d array this will insert a Dense layer i units in the residual bypass of residual Block 1 for each number in that 1D array (in this example none). The second nested array will insert i units in the resisual bypass of block 2 for each number in the array (in this example, one Desnse layer with 5 units - Dense(5,...)) and so forth.
+            20. b_norm_or_dropout_residual_bypass_layers: You may insert BatchNormalization or dropout layers after each layer of the residual bypass. Options: Default "dropout" | "bnorm".
+            21. dropout_rate_for_bypass_layers, float, defaults to 0.35: The dropout rate for the dropout layers in the RESIDUAL BYPASSES (ignored if B_NORM_OR_DROPOUT_RESIDUAL_BYPASS_LAYERS is set to 'bnorm'). This usually performs best as dropout and often with a higher DROPOUT_RATE_FOR_BYPASS_LAYERS (e.g. 25% or gerater).
+            22. minimum_dropout_rate_for_bypass_layers, float, defaults to 0.01: The minimum dropout rate for the dropout laters in the RESIDUAL BYPASSES to be tried. Only used if you are automatically setting hyperparameters and neural architecture.
+            23. maximim_dropout_rate_for_bypass_layers, float, defaults to 0.7: The maximum dropout rate for the dropout laters in the RESIDUAL BYPASSES to be tried. Only used if you are automatically setting hyperparameters and neural architecture.
+            24. n_options_dropout_rate_for_bypass_layers, int, defaults to 7: Number of dropout rates to be tried. Only used if you are automatically setting hyperparameters and neural architecture.
+            25. inter_block_layers_per_block: A 1d array of positive integers. Each ith positive integer adds one Dense layer with i units in each break between residualMLP blocks.
+            26. minimum_inter_block_layers_per_block, int, defaults to 3 (default to be changed to 0) Minimum number of neurons for a Dense layers to be inserted in between the resudual blocks to be tried. Only used if you are automatically setting hyperparameters and neural architecture.
+            27. maximum_inter_block_layers_per_block, int, defaults to 30, Maximum number of neurons for a Dense layers to be inserted in between the resudual blocks to be tried. Only used if you are automatically setting hyperparameters and neural architecture.
+            28. n_options_inter_block_layers_per_block, int, defaults to 7, Number of options for number of neurons for a Dense layers to be inserted in between the resudual blocks to be tried. Only used if you are automatically setting hyperparameters and neural architecture. 
+            29. b_norm_or_dropout_last_layers: After all last residual block, the hyperparameter FINAL_DENSE_LAYERS allows you to add a series (or just one) Dense layer(s). The hyperparameter b_norm_or_dropout_last_layers controls whether there will be a Dropout or BatchNormalization layer after each of these layer(s). This defaults to 'dropout' but can be set to 'bnorm'. It seems that about 60% of the time, dropout with the right dropout_rate will perform best, but be advised that these layers are more apt to internal covariate shift than the residual bypass layers. You amy want to experiment with both.
+            30. dropout_rate, float, defaults to 0.2: The dropout rate for the dropout layers after each final Dense layer inserted after the last residualMLP block by the parameter
+            31. minimum_dropout_rate, float, defaults to 0.01: Minimum dropout rate for final Dense layers inserted after the last residual blocks to be tried. Only used if you are automatically setting hyperparameters and neural architecture.
+            32. maximum_dropout_rate, float, defaults to 0.7: Maximum dropout rate for final Dense layers inserted after the last residual blocks to be tried. Only used if you are automatically setting hyperparameters and neural architecture.
+            33. n_options_dropout_rate, int, defaults to 7: Hw many dropout rates to try for final Dense layers inserted after the last residual blocks.  
+            34. final_dense_layers: A 1d array of positive integers: Each ith positive integer will insert a Dense layer after the last ResidualMLP block.
+            35. minimum_final_dense_layers, int, defaults to 0, Minimum number of neurons for a dense layer to insert after the last residual block. Only used if you are automatically setting hyperparameters and neural architecture.
+            36. maximum_final_dense_layers, int, defaults to 30, Maximum number of neurons for a dense layer to insert after the last residual block. Only used if you are automatically setting hyperparameters and neural architecture.
+            38. n_options_final_dense_layers', int, defaults to 2. How many options for number of neurons for a dense layer to insert after the last residual block. Only used if you are automatically setting hyperparameters and neural architecture.  
+            35. number_of_classes = how many Dense units the final layer of the network should consist of / also the number of classes in your labels. For example, a simple linear regression model would have this parameter set to 1. So would a binary logistic regression problem. For a multi - class - classification problem, it would be the number of classes, eg 10 for a classification problem where there are 10 possible classes.
             15. final_activation - The activation fucntion e.g. tf.keras.activations.sigmoid - [no parentheses after it] if you are doing binary classification. None if you are doing regression. The defaults is tf.keras.activations.softmax since most problems are multi class classification.
             16. loss - The loss that is appropriate for your problem. E.g. if we are doign simple linear regression, the default choice is usually tf.keras.losses.MeanSquaredError(), but tf.keras.losses.Huber() and tf.keras.losses.MeanAbsoluteError() are fair game in regression cases and one may perform better than the other depending on the distribution in the residuals against the domain of your data. For binary classification, you might set this as tf.keras.losses.BinaryCrossentropy. The default loss is tf.keras.losses.CategoricalCrossentropy(from_logits=False), since most problems are multi-class classification.
 
@@ -93,4 +233,17 @@
     8. Any use supporting any operation which attempts to sway public opinion, political alignment, or purchasing habits via means such as:
         1. Misleading the public to beleive that the opinions promoted by said operation are those of a different group of people (commonly referred to as astroturfing).
         2. Leading the public to beleive premises that contradict duly accepted scientific findings, implausible doctrines, or premises that are generally regarded as heretical or occult.
-    9. These or anything reasonably regarded as similar to these are prohibited uses of this codebase AND ANY DERIVITIVE WORK. Litigation will result upon discovery of any such violations.
+        3. Promoting or managing any operation profiting from dishonest or unorthodox marketing practices or marketing unorthodox products generally regarded as a junk deal to consumers or employees: (e.g. multi-level marketing operations, 'businesses' that rely on 1099 contractors not ensured a regular wage for all hours worked, companies having any full time employee paid less than $30,000 per year at the time of this writing weighted to BLS inflation, short term consumer lenders and retailers / car dealers offering credit to consumers who could not be approved for the same loan by an FDIC insured bank, operations that make sales though telemarketing or automated phone calls, non-opt-in email distribution marketing, vacation timeshare operations, etc.) 
+    9. Any use in an AI system that is inherently designed to avoid contact from customers, employees, applicants, citizens, or otherwise makes decsions that significantly affect a person's life or finances without human review of ALL decisions made by said system having an unfavorable impact on a person.
+    	1. Example of acceptable uses under this term:
+    		1. An IVR or email routing system that predicts which department a customer's inquirey should be routed to.
+    	2. Examples of unacceptable uses under this term:
+    		1. An IVR system that is designed to make it cumbersome for a customer to reach a human representative at a company (e.g. the system has no option to reach a human representative or the option is in a nested layer of a multi - layer menu of options).
+    		2. Email screening applications that only allow selected categories of email from known customers, employees, constituents, etc to appear in a business or government representative's email inbox, blindly discarding or obfuscating all other inquiries.
+    11. These or anything reasonably regarded as similar to these are prohibited uses of this codebase AND ANY DERIVITIVE WORK. Litigation will result upon discovery of any such violations.
+8. Acknowledgments:
+	1. My Jennifer and my stepkids who have chosen to stay around and have rode out quite a storm because of my career in science.
+	2. O'Malley, et. al. For Keras Tuner
+	3. Khalid Salama, for the Vision Transformer base model which was used as a template for the base model used in the VIT-ResidualMLP example (vision transformer).
+	4. Mingxing Tan, Quoc V. Le for EfficientNet.
+	5. My colleagues who I work with every day.
