@@ -92,6 +92,12 @@
     			}
     			```
     			4. Retreive the best model (call your Keras Tuner instance's .get_best_models(num_models=1) method, and extract the first item from the list. This should be a Keras model object. Continue training / validating the model and productionalize it. Alternatively you can get a printout of the optimal hyperparameter settings by calling your Keras Tuner instance's tuner.results_summary(num_trials=1) method and manually create and fit the model from option 2 below.
+    			   ```python3
+    			   {
+    			   best_model = tuner.get_best_models(num_models=1)[0]
+    			   best_model.evaluate(x_test)
+    			   }
+    			   ```
     		2. Option2 (or follow - up for option 1 to re-create the optimal model found by option 1):
     			1. Instantiate a ResidualMLP instance, setting the hyperparameters to the optimal settings. Refer to the API reference below. Also, for the parameter "blocks", refer to the CSV that was generated when you ran the tuner. The value listed on the printout from .results_summary() is the row number for the blocks option chosen (the column with no label immediately left of the column "number_of_blocks"). Find the row matching this number. On this row, find the cell for the column "blocks". Set the parameter "blocks" as the 2D list oject listed here.
     			```python3
