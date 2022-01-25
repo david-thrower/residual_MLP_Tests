@@ -126,7 +126,7 @@
     			optimal_model.evaluate(x_test)
     			```
 4. Are there any drawbacks with using a residual MLP model?
-    1. They are a little more complex and somewhat more computationally expensive than a standard multi layer perceptron on an epoch - by epoch basis. However considering that this model architecture does enable great performance after training on considerably smaller data sets and for far fewer epochs in manu cases, they still may be more efficient.
+    1. They are a little more complex and somewhat more computationally expensive than a standard multi layer perceptron on an epoch - by epoch basis. However considering that this model architecture does enable great performance after training on considerably smaller data sets for far fewer epochs in many cases, they still may be more efficient.
 5. Use example:
     Under construction... (a more user friendly example is forthcoming).
     1. VisionTransformer->ResidualMLP model:
