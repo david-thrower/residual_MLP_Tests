@@ -56,19 +56,19 @@
     			
     			# Set up the logs directory, tensorboard callback ...
     			
-			date = pendulum.now().__str__()[:16].replace("T","_").replace(":","_")
-
-			RESULTS_DIR = f'cifar10_{date}_test_run'
-			PATIENCE = 10
-			PATIENCE_MIN_DELTA = 0.00001
-			BATCH_SIZE = 300
-			EPOCHS = 100
-
-			logdir = os.path.join("logs", RESULTS_DIR + "_TB")
-			tensorboard_callback = tf.keras.callbacks.TensorBoard(logdir, histogram_freq=1)
-
-			# call the tuner instance's search method
-			tuner.search(x=x_train,
+    			date = pendulum.now().__str__()[:16].replace("T","_").replace(":","_")
+    			
+    			RESULTS_DIR = f'cifar10_{date}_test_run'
+    			PATIENCE = 10
+    			PATIENCE_MIN_DELTA = 0.00001
+    			BATCH_SIZE = 300
+    			EPOCHS = 100
+    			
+    			logdir = os.path.join("logs", RESULTS_DIR + "_TB")
+    			tensorboard_callback = tf.keras.callbacks.TensorBoard(logdir, histogram_freq=1)
+    			
+    			# call the tuner instance's search method
+    			tuner.search(x=x_train,
 				     y=y_train,
 				     epochs=EPOCHS,
 				     batch_size=BATCH_SIZE, 
