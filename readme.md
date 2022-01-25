@@ -34,7 +34,7 @@
     		```
     	2. Have the api buld your model:
     		1. Option 1: Use Keras Tuner find an optimal neural architecture and hyperparameter state for you:
-    			1. Pass your instance of ResidualMLP.build_auto_residual_mlp() method as an argument to a Keras Tuner instance. 
+    			1. Pass your instance of ResidualMLP.build_auto_residual_mlp() method as an argument to a Keras Tuner instance. I recommend using the Hyperband() tuner class.
     			```python3
     			{
     			
@@ -48,7 +48,7 @@
 			    
     			}
     			```
-    			2. Call the tuner's .search() method. Watch, wait ... I recommend using the Hyperband() tuner class. Example:
+    			2. Call the tuner's .search() method. Watch, wait ...  Example:
     			```python3
     			{
     			
