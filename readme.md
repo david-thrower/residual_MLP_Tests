@@ -40,7 +40,7 @@
     			
     			import keras_tuner as kt
     			
-			tuner = kt.Hyperband(
+    			tuner = kt.Hyperband(
 			    res_mlp_model_maker.build_auto_residual_mlp,
 			    objective='val_loss',
 			    max_epochs = 30,
