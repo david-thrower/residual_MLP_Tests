@@ -55,6 +55,7 @@
     			{
     			
     			# Set up the logs directory, tensorboard callback ...
+    			
 			date = pendulum.now().__str__()[:16].replace("T","_").replace(":","_")
 
 			RESULTS_DIR = f'cifar10_{date}_test_run'
