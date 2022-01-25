@@ -12,12 +12,13 @@
     		1. Set the argument "problem_type" to 'classification' or 'regression' respectively.
     		2. Set the argument "base_model" to any suitable Keras model instance (e.g. an EfficientNetB7 that you pulled from keras applications - https://keras.io/api/applications/efficientnet/, removed the final Dense layer, and set the last conv2d layer to trainable). If you are making a simple ResidualMLP model that is not a tandem model, set base_model to empty string "".
     		3. Set the argument "input_shape" to the shape of your data.
-    		4. Set the argument "base_model_input_shape" to the shape which your base model expects (or the shape of your data if it does not require a specific shape) where the output of any suitable base model can  are an excelent way to enable effective transfer learning. If base_model is set to empty string "", then this param is ignored.
+    		4. Set the argument "base_model_input_shape" to the shape which your base model expects (or the shape of your data if it does not require a specific shape). If base_model is set to empty string "", then this param is ignored.
     		5. Set the argument "number_of_classes":
     			1. For simple linear regression and binary classification, set this to 1.
     			2. For multi class classification, set this to the number of classes.
-    		6. If you are not working on a multi-class classification problem, set the argument "final_activation" to a suitable final layer activation for the problem your model serves, e.g. (tf.keras.activations.sigmoid). For linear regression, set this to None. For multi-class classification, you may leave this default, unless you wanted to use a different activation than softmax. 
-    		7.  If you are not working on a multi-class classification problem, set the argument "loss" to a suitable loss function for your problem (e.g. tf.keras.losses.BinaryCrossentropy). For multi-class classification, you may leave this as default, because this defaults to categorical cross-entropy, unless you wanted to use a different loss function. Example:
+    		6. If you are not working on a multi-class classification problem, set the argument "final_activation" to a suitable final layer activation for the problem your model serves, (e.g. tf.keras.activations.sigmoid). For linear regression, set this to None. For multi-class classification, you may leave this default, unless you wanted to use a different activation than softmax.
+    		7.  If you are not working on a multi-class classification problem, set the argument "loss" to a suitable loss function for your problem (e.g. tf.keras.losses.BinaryCrossentropy). For multi-class classification, you may leave this as default, because this defaults to categorical cross-entropy, unless fo course you wanted to use a different loss function. Example:
+    		
     		```python3
     		{
     		
