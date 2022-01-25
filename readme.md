@@ -37,6 +37,7 @@
     			1. Pass your instance of ResidualMLP.build_auto_residual_mlp() method as an argument to a Keras Tuner instance. 
     			```python3
     			{
+    			
     			import keras_tuner as kt
 			tuner = kt.Hyperband(
 			    res_mlp_model_maker.build_auto_residual_mlp,
