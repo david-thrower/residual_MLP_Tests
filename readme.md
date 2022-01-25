@@ -112,8 +112,18 @@
     			2. Call the .make_tandem_model() method which will return an untrained keras model object with the hyperparameters and neural architecture selected. Fit this as you would any other Keras model.
     			```python3
     			{
-    			model_maker.make_tandem_model()
+ 
+    			optimal_model = model_maker.make_tandem_model()
+    			optimal_model.fit(x=x_train,
+    			                  y=y_train,
+    			                  epochs=EPOCHS,
+    			                  batch_size=BATCH_SIZE,
+    			                  calbacks = [...],
+    			                  validation_split=0.3)
+ 
     			}
+    			
+    			optimal_model.evaluate(x_test)
     			```
 4. Are there any drawbacks with using a residual MLP model?
     1. They are a little more complex and somewhat more computationally expensive than a standard multi layer perceptron on an epoch - by epoch basis. However considering that this model architecture does enable great performance after training on considerably smaller data sets and for far fewer epochs in manu cases, they still may be more efficient.
