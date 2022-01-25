@@ -48,7 +48,9 @@
 			    
     			}
     			```
+    			
     			2. Call the tuner's .search() method. Watch, wait ...  Example:
+    			
     			```python3
     			{
     			
@@ -81,6 +83,7 @@
 				     validation_split=0.3)
     			}
     			```
+    			
     			3. (Optional) Call your tuner instance's .results_summary(num_trials=1) method to get a printout of the best hyperparameter settings. Or num_trials=5 to get the 5 best combinations of hyperparameter settings ...
     			```python3
     			{
