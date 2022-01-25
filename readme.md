@@ -234,7 +234,7 @@
         1. Misleading the public to beleive that the opinions promoted by said operation are those of a different group of people (commonly referred to as astroturfing).
         2. Leading the public to beleive premises that contradict duly accepted scientific findings, implausible doctrines, or premises that are generally regarded as heretical or occult.
         3. Promoting or managing any operation profiting from dishonest or unorthodox marketing practices or marketing unorthodox products generally regarded as a junk deal to consumers or employees: (e.g. multi-level marketing operations, 'businesses' that rely on 1099 contractors not ensured a regular wage for all hours worked, companies having any full time employee paid less than $30,000 per year at the time of this writing weighted to BLS inflation, short term consumer lenders and retailers / car dealers offering credit to consumers who could not be approved for the same loan by an FDIC insured bank, operations that make sales though telemarketing or automated phone calls, non-opt-in email distribution marketing, vacation timeshare operations, etc.) 
-    9. Any use in an AI system that is inherently designed to avoid contact from customers, employees, applicants, citizens, or otherwise makes decsions that significantly affect a person's life or finances without human review of ALL decisions made by by said system having an unfavorable impact on a person.
+    9. Any use in an AI system that is inherently designed to avoid contact from customers, employees, applicants, citizens, or otherwise makes decsions that significantly affect a person's life or finances without human review of ALL decisions made by said system having an unfavorable impact on a person.
     	1. Example of acceptable uses under this term:
     		1. An IVR or email routing system that predicts which department a customer's inquirey should be routed to.
     	2. Examples of unacceptable uses under this term:
@@ -242,7 +242,8 @@
     		2. Email screening applications that only allow selected categories of email from known customers, employees, constituents, etc to appear in a business or government representative's email inbox, blindly discarding or obfuscating all other inquiries.
     11. These or anything reasonably regarded as similar to these are prohibited uses of this codebase AND ANY DERIVITIVE WORK. Litigation will result upon discovery of any such violations.
 8. Acknowledgments:
-	1. My lifleong partner Jennifer and my stepkids who have chosen to stay around and have rode out quite a storm because of my career in science.
+	1. My Jennifer and my stepkids who have chosen to stay around and have rode out quite a storm because of my career in science.
 	2. O'Malley, et. al. For Keras Tuner
 	3. Khalid Salama, for the Vision Transformer base model which was used as a template for the base model used in the VIT-ResidualMLP example (vision transformer).
-	4. My colleagues who I work with every day.
+	4. Mingxing Tan, Quoc V. Le for EfficientNet.
+	5. My colleagues who I work with every day.
