@@ -39,11 +39,13 @@
     			{
     			
     			import keras_tuner as kt
+    			
 			tuner = kt.Hyperband(
 			    res_mlp_model_maker.build_auto_residual_mlp,
 			    objective='val_loss',
 			    max_epochs = 30,
 			    hyperband_iterations = 2)
+			    
     			}
     			```
     			2. Call the tuner's .search() method. Watch, wait ... I recommend using the Hyperband() tuner class. Example:
