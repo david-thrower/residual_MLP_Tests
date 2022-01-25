@@ -1,20 +1,112 @@
-#  Residual Multi Layer Perceptron build and fit engine written in python 10.0.0 using Tensorflow 2.6 functional API. 
-## This is useful for building residual MLP models both as stand alone residual MLP models and as tandem [convolutional | vision transformer | etc]->Residual MLP models where the resudual MLP aspect of the model is used to augment the performance of a commonly used base model for transfer learning (e.g. EffieientNet/ResnetNet/etc.).
-
+#  Residual Multi Layer Perceptron neural architecure and hyperparameter search algorithym written in python 10.0.0 using Tensorflow 2.6 functional API. 
+## This is useful for building residual MLP models both as stand alone residual MLP models and as tandem [convolutional | vision transformer | etc]->ResidualMLP tarnsfer learning models where the resudual MLP aspect of the model is used to augment the performance of a commonly used base model for transfer learning (e.g. EffieientNet/ResnetNet/etc.).
 1. Purpose: This is a core engine for recursively building, compiling, and testing Residual Multi Layer Perceptron models. This is meant to enable neural architecture search in this non-standard and non-sequential MLP architecture. This system abstracts away most of the tedious work of building residual multi layer perceptron models and reduces it to a selection of any suitable permutations of this neural architecture constructor's hyperparameters.
-2. What is a residual multi layer perceptron? It is a non-sequential multi-layer-perceptron where as with all multi layer perceptrons, there is a block of sequential Dense layers (basically the layers we see below in blue), however, unlike a standard sequential multi - layer - perceptron, there is also a "residual tensor" (seen below in the layers in yellow) which forwards a duplicate of the input to this block of dense layers forward, bypassing the block of dense layers. At the output end of the block of dense layers, the residual tensor is concatenated with the output of the block of sequential dense layers before proceeding to the next block. This creates a memory effect and importantly, attenuates some of the deleterious effects introduced by very deep networks, such as overfitting, [exploding | valishing] gradients, and internal covariate shift. 
+2. What is a residual multi layer perceptron? It is a non-sequential multi-layer-perceptron where as with all multi layer perceptrons, there is a block of sequential Dense layers (basically the layers we see below in blue), however, unlike a standard sequential multi - layer - perceptron, there is also a "residual bypass path" (seen below in the layers in yellow) which forwards a duplicate of the input to this block of dense layers forward, bypassing the block of dense layers. At the output end of the block of dense layers, the duplicate copy of the input to the block of Dense layers is concatenated with the output of the block of sequential dense layers before proceeding to the next block. This creates a memory effect and importantly, attenuates some of the deleterious effects introduced by very deep networks, such as overfitting, [exploding | valishing] gradients, and importantly, internal covariate shift. 
    ![/assets/residual_mlp_summary.drawio.png](/assets/residual_mlp_summary.drawio.png)
 3. Why use a residual multi layer perceptron model?
-    1. Better performance on small data sets.
+    1. Better performance, especially on small data sets.
     2. Residual MLPs enable greater model complexity and insanely deep neural network depth before overfitting, valishing and exploding gradients, and internal covariate shift become the model complexity limiting factors.
     3. Better precision, recall, and other performance metrics with less training data and far fewer epochs.
+    4. They are a perfect to use to augment any suitable pre-trained base model and create an effective transfer learning model. With this API, you can easily build and compile a tandem model which uses pipes the output of any suitable keras model into a ResidualMLP model which should outperform "textbook" models and give you State Of The Art (SOTA) performance with regard to accuracy, precision, top-k, RMSE (respectively). To do this:
+    	1. Instantiate an instance of the ResidualMLP class.
+    		1. Set the argument "problem_type" to 'classification' or 'regression' respectively.
+    		2. Set the argument "base_model" to any suitable Keras model instance (e.g. an EfficientNetB7 that you pulled from keras applications - https://keras.io/api/applications/efficientnet/, removed the final Dense layer, and set the last conv2d layer to trainable). If you are making a simple ResidualMLP model that is not a tandem model, set base_model to empty string "".
+    		3. Set the argument "input_shape" to the shape of your data.
+    		4. Set the argument "base_model_input_shape" to the shape which your base model expects (or the shape of your data if it does not require a specific shape) where the output of any suitable base model can  are an excelent way to enable effective transfer learning. If base_model is set to empty string "", then this param is ignored.
+    		5. Set the argument "number_of_classes":
+    			1. For simple linear regression and binary classification, set this to 1.
+    			2. For multi class classification, set this to the number of classes.
+    		6. If you are not working on a multi-class classification problem, set the argument "final_activation" to a suitable final layer activation for the problem your model serves, e.g. (tf.keras.activations.sigmoid). For linear regression, set this to None. For multi-class classification, you may leave this default, unless you wanted to use a different activation than softmax. 
+    		7.  If you are not working on a multi-class classification problem, set the argument "loss" to a suitable loss function for your problem (e.g. tf.keras.losses.BinaryCrossentropy). For multi-class classification, you may leave this as default, because this defaults to categorical cross-entropy, unless you wanted to use a different loss function. Example:
+    		```python3
+    		{
+    		
+    		from residualmlp.residual_mlp import ResidualMLP
+    		
+    		res_mlp_model_maker = ResidualMLP(problem_type = 'classification',
+				    		  base_model = previously_instantiated_EfficientNetB7_instance,
+				    		  input_shape = (32,32,3),
+				    		  base_model_input_shape = (600,600,3),
+				    		  number_of_classes=10)
+    		
+    		}
+    		```
+    	2. Have the api buld your model:
+    		1. Option 1: Use Keras Tuner find an optimal neural architecture and hyperparameter state for you:
+    			1. Pass your instance of ResidualMLP.build_auto_residual_mlp() method as an argument to a Keras Tuner instance. 
+    			```python3
+    			{
+    			import keras_tuner as kt
+			tuner = kt.Hyperband(
+			    res_mlp_model_maker.build_auto_residual_mlp,
+			    objective='val_loss',
+			    max_epochs = 30,
+			    hyperband_iterations = 2)
+    			}
+    			```
+    			2. Call the tuner's .search() method. Watch, wait ... I recommend using the Hyperband() tuner class. Example:
+    			```python3
+    			{
+    			
+    			# Set up the logs directory, tensorboard callback ...
+			date = pendulum.now().__str__()[:16].replace("T","_").replace(":","_")
+
+			RESULTS_DIR = f'cifar10_{date}_test_run'
+			PATIENCE = 10
+			PATIENCE_MIN_DELTA = 0.00001
+			BATCH_SIZE = 300
+			EPOCHS = 100
+
+			logdir = os.path.join("logs", RESULTS_DIR + "_TB")
+			tensorboard_callback = tf.keras.callbacks.TensorBoard(logdir, histogram_freq=1)
+
+			# call the tuner instance's search method
+			tuner.search(x=x_train,
+				     y=y_train,
+				     epochs=EPOCHS,
+				     batch_size=BATCH_SIZE, 
+				     callbacks=[
+					    tf.keras.callbacks.EarlyStopping(
+						monitor="val_loss",
+						patience=PATIENCE,
+						min_delta=PATIENCE_MIN_DELTA,
+						restore_best_weights=True,
+					    ),
+					    tensorboard_callback,
+					],
+				     validation_split=0.3)
+    			}
+    			```
+    			3. (Optional) Call your tuner instance's .results_summary(num_trials=1) method to get a printout of the best hyperparameter settings. Or num_trials=5 to get the 5 best combinations of hyperparameter settings ...
+    			```python3
+    			{
+    			tuner..results_summary(num_trials=1)
+    			}
+    			```
+    			4. Retreive the best model (call your Keras Tuner instance's .get_best_models(num_models=1) method, and extract the first item from the list. This should be a Keras model object. Continue training / validating the model and productionalize it. Alternatively you can get a printout of the optimal hyperparameter settings by calling your Keras Tuner instance's tuner.results_summary(num_trials=1) method and manually create and fit the model from option 2 below.
+    		2. Option2 (or follow - up for option 1 to re-create the optimal model found by option 1):
+    			1. Instantiate a ResidualMLP instance, setting the hyperparameters to the optimal settings. Refer to the API reference below. Also, for the parameter "blocks", refer to the CSV that was generated when you ran the tuner. The value listed on the printout from .results_summary() is the row number for the blocks option chosen (the column with no label immediately left of the column "number_of_blocks"). Find the row matching this number. On this row, find the cell for the column "blocks". Set the parameter "blocks" as the 2D list oject listed here.
+    			```python3
+    			{
+    			model_maker = ResidualMLP(
+    				# same problem_type, input_shape, ... final layer activation and loss  ...
+	    			# ... [params = values listed on tuner.results_summary's printout] 
+	    			blocks = [[3, 18, 4], [3, 18, 4]],
+	    			# ... [more params = more values listed on tuner.results_summary's printout])
+    			}
+    			```
+    			2. Call the .make_tandem_model() method which will return an untrained keras model object with the hyperparameters and neural architecture selected. Fit this as you would any other Keras model.
+    			```python3
+    			{
+    			model_maker.make_tandem_model()
+    			}
+    			```
 4. Are there any drawbacks with using a residual MLP model?
-    1. They are a little computationallly expensive on an epoch - by epoch basis. However considering that this model architecture does enable great performance after training on considerably smaller data sets and for far fewer epochs, they do make up for this and then some.
-    2. Although they can train quickly, for the time they are training, they do need larger hardware configurations consistent with the scale of their model complexity in order to complete training successfully. For example, when training a models on a subset of the CIFAR10 dataset, using the pre-trained EfficientNetB7 (having only the last conv2d layer set to trainable and the output of layers[-3] diverted into the input layer of a de-novo ResidualMLP model with optimal residual MLP neural network architecture hyperparameter settings for this problem), I found it will usually exhaust the RAM on hardware having 45GB of RAM, unless it is run on a container allocated with at least 2 A4000 GPUs. With this said, it was trained on a subset of only 10% of the training set minus a 30% validation split (trained on 3500 training images with 1500 validation images). This reached 89.6% top-1-val-accuracy at only 33 epochs, with 1 hour, 3 min, and 35 sec of training. Also, this specific case of an EfficientNetB7-> 14-layer-residual-MLP is by design an extreme case intended to pressure test this architecture and neural architecture automation. Most residual MLP applications should consume considerably less resources, but still more than the garden variety small sequential MPL model. This can make some jobs not financially worth the cost of training them. However, for most training jobs that have failed due to small sample size / not enough data (the niche of this model architecture), this may be an ideal overall algorithm for your business problem.
+    1. They are a little more complex and somewhat more computationally expensive than a standard multi layer perceptron on an epoch - by epoch basis. However considering that this model architecture does enable great performance after training on considerably smaller data sets and for far fewer epochs in manu cases, they still may be more efficient.
 5. Use example:
     Under construction... (a more user friendly example is forthcoming).
     1. VisionTransformer->ResidualMLP model:
-        1. The VisionTransformer base model used her is forked from Khalid Salama's work here: https://keras.io/examples/vision/image_classification_with_vision_transformer/
+        1. The VisionTransformer base model used her is forked from Khalid Salama's work found here: https://keras.io/examples/vision/image_classification_with_vision_transformer/
         2. With the removal of the training MLP and a reduction of the number of transformer_layers, you have a base model amenable to serve as a base model for a tandem VisionTransformer->ResidualMLP model.
         3. The construction of the VIT - ResidualMLP model is demonstrated here https://github.com/david-thrower/residual_MLP_Tests/blob/main/use-examples/VisionTransformer-ResidualMLP/vit-ResidualMLP-image-classifier.ipynb. This is a proof of concept, but hopefully with some hyperparameter optimization, we can release a new state of the art model. 
     2. Transfer learning on EfficientNetB7, previously trained on ImageNet, augmented with a 14 layer residual MLP). These are all components of the example. task_trigger.py and task.py are the main files. Unfortunately, with this generating several MB of logs and training for ~ an hour, it was not practical to run this in a Jupyter notebook, but here is the cascade of the training pipeline for this task: From the shell: 1. the shell command `python3 task_trigger.py` generates and runs run_2021-12-27_07-34_job.sh. 2. run_2021-12-27_07-34_job.sh runs task.py with the selected arguments. Lastly, task.py imports and uses the package residualmlp, as well as the training data and base model. These are the files below:
