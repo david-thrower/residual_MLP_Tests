@@ -99,7 +99,7 @@
     			   }
     			   ```
     		2. Option2 (or follow - up for option 1 to re-create the optimal model found by option 1):
-    			1. Instantiate a ResidualMLP instance, setting the hyperparameters to the optimal settings. Refer to the API reference below. Also, for the parameter "blocks", refer to the CSV that was generated when you ran the tuner. The value listed on the printout from .results_summary() is the row number for the blocks option chosen (the column with no label immediately left of the column "number_of_blocks"). Find the row matching this number. On this row, find the cell for the column "blocks". Set the parameter "blocks" as the 2D list oject listed here.
+    			1. Instantiate a ResidualMLP instance, setting the hyperparameters to the optimal settings. Refer to the API reference below. Also, for the parameter "blocks", refer to the CSV that was generated when you ran the tuner. The value listed as the optimal value for the hyperparameter "blocks" on the printout from .results_summary() is the row number for the blocks option determined to be optimal (the column with no label immediately left of the column "number_of_blocks"). Find the row matching this number. On this row, find the cell for the column "blocks". When you instantiate the ResidualMLP object, set the parameter "blocks" as the 2D list oject listed here in the Blocks column for the row that was listed as best.
     			```python3
     			{
     			model_maker = ResidualMLP(
