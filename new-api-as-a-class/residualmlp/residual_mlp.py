@@ -350,8 +350,6 @@ class ResidualMLP:
         valid_permutations_df =\
             permutations_of_blocks_df.query("valid_block == True")\
             .reset_index(drop=True)
-        print("Valid permutations")
-        print(valid_permutations_df)
         
         list_of_blocks_args = list()
         for i in np.arange(valid_permutations_df.shape[0]):
@@ -371,11 +369,12 @@ class ResidualMLP:
                                            'neurons_per_block_layer'],
                                             ascending=True)\
             .reset_index(drop=True)
-        
+
         # for reeference, the list of block options is saved as a csv
         date = pendulum.now().__str__()[:16].replace("T","_").replace(":","_")
         valid_permutations_df.to_csv(f'{date}_blocks_permutations.csv')
-        
+        print("Valid permutations")
+        print(valid_permutations_df)
         list_to_choose_blocks_option_from =\
             [int(i) for i in np.arange(valid_permutations_df.shape[0])]
         blocks_index_chosen = hp.Choice(
