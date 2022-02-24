@@ -1,0 +1,19 @@
+param,type,help,default
+min_efficient_net_head_layer_dense_units,int,"Minimum dense units for the first MLP layer after the effifientnet submodel.",1
+max_efficient_net_head_layer_dense_units,int,"Maximum dense units for the first MLP layer after the effifientnet submodel.",50
+n_options_efficient_net_head_layer_dense_units,int,"How many options for  the first MLP layer after the effifientnet submodel to try.",3
+min_efficient_net_residual_block_layers,int,"Minimum dense units for the residual Dense layer after the effifientnet submodel.",1
+max_efficient_net_residual_block_layers,int,"Maximum dense units for the residual Dense layer after the effifientnet submodel.",50
+n_options_efficient_net_residual_block_layers,int,"How many options for residual Dense layer after the effifientnet submodel to try.",3
+min_head_gru_units,int,"Minimum GRU units for the first GRU layer to try.",2
+max_head_gru_units,int,"Maximum GRU units for the first GRU layer to try.",25
+n_options_head_gru_units,int,"How many options for GRU units for the first GRU layer to try.",3
+min_second_gru_units,int,"Minimum GRU units for the 2nd GRU layer to try.",2
+max_second_gru_units,int,"Maximum GRU units for the 2nd GRU layer to try.",25
+n_options_second_gru_units,int,"How many options for GRU units for the first GRU layer to try.",3
+min_gru_head_layer_dense_units,int,"Minimum dense units for the first MLP layer after the GRU submodel.",1
+max_gru_head_layer_dense_units,int,"Maximum dense units for the first MLP layer after the GRU submodel.",50
+n_options_gru_head_layer_dense_units,int,"How many options for  the first MLP layer after the GRU submodel to try.",3
+min_gru_residual_block_layers,int,"Minimum dense units for the residual Dense layer after the GRU submodel.",1
+max_gru_residual_block_layers,int,"Maximum dense units for the residual Dense layer after the GRU submodel.",50
+n_options_gru_residual_block_layers,int,"How many options for residual Dense layer after the GRU submodel to try.",3

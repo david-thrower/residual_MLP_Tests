@@ -596,9 +596,9 @@ class ResidualMLP:
                          metrics=metrics)
         return modelo_final
         
-    def make_gru_concat_efficientnetb7_residualmlp_model(self,
-                                                         hp):
-    
+	def make_gru_concat_efficientnetb7_residualmlp_model(self,
+		                                                 hp):
+		
 		efficient_net_head_layer_dense_units_options =\
 		    [int(i) for i in 
 		    np.linspace(self.min_efficient_net_head_layer_dense_units,
@@ -643,7 +643,7 @@ class ResidualMLP:
 		                dtype=np.int32)]
 		
 		
-		inp = tf.keras.layers.Input(shape=(32,32,3))
+		inp = tf.keras.layers.Input(shape=self.input_shape)
 		x = tf.keras.layers.Resizing(600,600)(inp)
 		y = inp
 
@@ -673,16 +673,23 @@ class ResidualMLP:
 		head_gru_units_options = hp.Choice(name="head_gru_units",
 		                                  values=head_gru_units_options,
 		                                  ordered=True)
-		y_ch0, y_ch0_state  = tf.keras.layers.GRU(head_gru_units,input_shape=(None,32,32),return_sequences=True, return_state=True)(y_ch0)
-		y_ch1, y_ch1_state  = tf.keras.layers.GRU(head_gru_units,input_shape=(None,32,32),return_sequences=True, return_state=True)(y_ch1)
-		y_ch2, y_ch2_state  = tf.keras.layers.GRU(head_gru_units,input_shape=(None,32,32),return_sequences=True, return_state=True)(y_ch2)
+		gru_input_shape = (None,self.input_shape[0],self.input_shape[1])
+		y_ch0, y_ch0_state  = tf.keras.layers.GRU(head_gru_units,input_shape=(gru_input_shape),return_sequences=True, return_state=True)(y_ch0)
+		y_ch1, y_ch1_state  = tf.keras.layers.GRU(head_gru_units,input_shape=(gru_input_shape),return_sequences=True, return_state=True)(y_ch1)
+		y_ch2, y_ch2_state  = tf.keras.layers.GRU(head_gru_units,input_shape=(gru_input_shape),return_sequences=True, return_state=True)(y_ch2)
 
 		second_gru_units = hp.Choice(name="second_gru_units", 
 		                             values=second_gru_units_options,
 		                             ordered=True)
-		y_ch0 = tf.keras.layers.GRU(second_gru_units,input_shape=(None,32,head_gru_units))([y_ch0,y_ch0_state])
-		y_ch1 = tf.keras.layers.GRU(second_gru_units,input_shape=(None,32,head_gru_units))([y_ch1,y_ch1_state])
-		y_ch2 = tf.keras.layers.GRU(second_gru_units,input_shape=(None,32,head_gru_units))([y_ch2,y_ch2_state])
+		y_ch0 = tf.keras.layers.GRU(second_gru_units,input_shape=(None,
+		                                                          self.input_shape[0],
+		                                                          head_gru_units))([y_ch0,y_ch0_state])
+		y_ch1 = tf.keras.layers.GRU(second_gru_units,input_shape=(None,
+		                                                          self.input_shape[0],
+		                                                          head_gru_units))([y_ch1,y_ch1_state])
+		y_ch2 = tf.keras.layers.GRU(second_gru_units,input_shape=(None,
+		                                                          self.input_shape[0],
+		                                                          head_gru_units))([y_ch2,y_ch2_state])
 
 		y = tf.keras.layers.Concatenate(axis=1)([y_ch0,y_ch1,y_ch2])
 
