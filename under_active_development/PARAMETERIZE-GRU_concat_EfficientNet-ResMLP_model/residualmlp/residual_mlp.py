@@ -596,38 +596,56 @@ class ResidualMLP:
                          metrics=metrics)
         return modelo_final
         
-	def make_gru_concat_efficientnetb7_residualmlp_model(self,
+    def make_gru_concat_efficientnetb7_residualmlp_model(self,
 		                                                 hp):
 		
-		efficient_net_head_layer_dense_units_options =\
+        mod_with_fc_raw = tf.keras.applications.efficientnet.EfficientNetB7(
+            include_top=True, weights='imagenet', input_tensor=None,
+            input_shape = (600,600,3), pooling='max', classes=1000
+        )
+        
+        # Make the deepest conv2d layer trainable, leave everything else
+        # as not trainable
+        for layer in mod_with_fc_raw.layers:
+            layer.trainable = False
+        # Last conv2d layer. This we want to train .
+        mod_with_fc_raw.layers[-6].trainable = True
+        
+        # Create the final base model
+        # (remove the final Dense and BatchNormalization layers ...) 
+        efficient_net_b_7_transferable_base_model =\
+            tf.keras.Model(inputs=mod_with_fc_raw.layers[0].input, 
+                            outputs=mod_with_fc_raw.layers[-3].output)
+        
+        efficient_net_head_layer_dense_units_options =\
 		    [int(i) for i in 
 		    np.linspace(self.min_efficient_net_head_layer_dense_units,
 		                self.max_efficient_net_head_layer_dense_units,
 		                self.n_options_efficient_net_head_layer_dense_units,
 		                dtype=np.int32)]
 
-		efficient_net_residual_block_layers_options =\
+        efficient_net_residual_block_layers_options =\
 		    [int(i) for i in 
 		    np.linspace(self.min_efficient_net_residual_block_layers,
 		                self.max_efficient_net_residual_block_layers,
 		                self.n_options_efficient_net_residual_block_layers,
 		                dtype=np.int32)]
 
-		head_gru_units_options =\
+        head_gru_units_options =\
 		    [int(i) for i in 
 		    np.linspace(self.min_head_gru_units,
 		                self.max_head_gru_units,
 		                self.n_options_head_gru_units,
 		                dtype=np.int32)]
 		
-		second_gru_units_options =\
+        second_gru_units_options =\
 		    [int(i) for i in 
 		    np.linspace(self.min_second_gru_units,
 		                self.max_second_gru_units,
 		                self.n_options_second_gru_units,
 		                dtype=np.int32)]
 	 
-		gru_head_layer_dense_units_options =\
+        gru_head_layer_dense_units_options =\
 		    [int(i) for i in 
 		    np.linspace(self.min_gru_head_layer_dense_units,
 		                self.max_gru_head_layer_dense_units,
@@ -635,7 +653,7 @@ class ResidualMLP:
 		                dtype=np.int32)]
 		
 		# This should eb 
-		gru_residual_block_layers_options =\
+        gru_residual_block_layers_options =\
 		    [int(i) for i in 
 		    np.linspace(self.min_gru_residual_block_layers,
 		                self.max_gru_residual_block_layers,
@@ -643,84 +661,113 @@ class ResidualMLP:
 		                dtype=np.int32)]
 		
 		
-		inp = tf.keras.layers.Input(shape=self.input_shape)
-		x = tf.keras.layers.Resizing(600,600)(inp)
-		y = inp
+        inp = tf.keras.layers.Input(shape=self.input_shape)
+        x = tf.keras.layers.Resizing(600,600)(inp)
+        y = inp
 
-		x = efficient_net_b_7_transferable_base_model(x)
-		x = tf.keras.layers.BatchNormalization()(x)
-		x = tf.keras.layers.Dense(hp.Choice(name="efficient_net_head_layer_dense_units", 
-		                                    values=efficient_net_head_layer_dense_units_options,
-		                                    ordered=True),
-		                          activation=tf.keras.activations.relu,
-		                          kernel_initializer=tf.keras.initializers.GlorotNormal)(x)
-		x_residual = x
+        x = efficient_net_b_7_transferable_base_model(x)
+        x = tf.keras.layers.BatchNormalization()(x)
+        x = tf.keras.layers.Dense(
+            hp.Choice(name="efficient_net_head_layer_dense_units", 
+                      values=efficient_net_head_layer_dense_units_options,
+                      ordered=True),
+            activation=tf.keras.activations.relu,
+            kernel_initializer=tf.keras.initializers.GlorotNormal)(x)
+        x_residual = x
 
-		# for layer in efficient_net_residual_block_layers:
-		x = tf.keras.layers.BatchNormalization()(x)
-		x = tf.keras.layers.Dense(hp.Choice(name="efficient_net_residual_block_layers",
-		                                    values=efficient_net_residual_block_layers_options,
-		                                    ordered=True),
-		                    activation=tf.keras.activations.relu, 
-		                    kernel_initializer=tf.keras.initializers.GlorotNormal)(x)
+        # for layer in efficient_net_residual_block_layers:
+        x = tf.keras.layers.BatchNormalization()(x)
+        x = tf.keras.layers.Dense(
+            hp.Choice(name="efficient_net_residual_block_layers",
+		              values=efficient_net_residual_block_layers_options,
+		              ordered=True),
+		    activation=tf.keras.activations.relu, 
+		    kernel_initializer=tf.keras.initializers.GlorotNormal)(x)
 
-		x = tf.keras.layers.Concatenate(axis=1)([x,x_residual])
+        x = tf.keras.layers.Concatenate(axis=1)([x,x_residual])
 
-		y_ch0 = y[:,:,:,0]
-		y_ch1 = y[:,:,:,1]
-		y_ch2 = y[:,:,:,2]
+        y_ch0 = y[:,:,:,0]
+        y_ch1 = y[:,:,:,1]
+        y_ch2 = y[:,:,:,2]
 
-		head_gru_units_options = hp.Choice(name="head_gru_units",
-		                                  values=head_gru_units_options,
-		                                  ordered=True)
-		gru_input_shape = (None,self.input_shape[0],self.input_shape[1])
-		y_ch0, y_ch0_state  = tf.keras.layers.GRU(head_gru_units,input_shape=(gru_input_shape),return_sequences=True, return_state=True)(y_ch0)
-		y_ch1, y_ch1_state  = tf.keras.layers.GRU(head_gru_units,input_shape=(gru_input_shape),return_sequences=True, return_state=True)(y_ch1)
-		y_ch2, y_ch2_state  = tf.keras.layers.GRU(head_gru_units,input_shape=(gru_input_shape),return_sequences=True, return_state=True)(y_ch2)
+        head_gru_units =\
+            hp.Choice(name="head_gru_units",
+		              values=head_gru_units_options,
+		              ordered=True)
+        gru_input_shape =\
+            (None,self.input_shape[0],self.input_shape[1])
+        y_ch0, y_ch0_state  =\
+            tf.keras.layers.GRU(head_gru_units,
+                                input_shape=(gru_input_shape),
+                                return_sequences=True, 
+                                return_state=True)(y_ch0)
+        y_ch1, y_ch1_state  =\
+            tf.keras.layers.GRU(head_gru_units,
+                                input_shape=(gru_input_shape),
+                                return_sequences=True, 
+                                return_state=True)(y_ch1)
+        y_ch2, y_ch2_state  =\
+            tf.keras.layers.GRU(head_gru_units,
+                                input_shape=(gru_input_shape),
+                                return_sequences=True,
+                                return_state=True)(y_ch2)
 
-		second_gru_units = hp.Choice(name="second_gru_units", 
+        second_gru_units = hp.Choice(name="second_gru_units", 
 		                             values=second_gru_units_options,
 		                             ordered=True)
-		y_ch0 = tf.keras.layers.GRU(second_gru_units,input_shape=(None,
-		                                                          self.input_shape[0],
-		                                                          head_gru_units))([y_ch0,y_ch0_state])
-		y_ch1 = tf.keras.layers.GRU(second_gru_units,input_shape=(None,
-		                                                          self.input_shape[0],
-		                                                          head_gru_units))([y_ch1,y_ch1_state])
-		y_ch2 = tf.keras.layers.GRU(second_gru_units,input_shape=(None,
-		                                                          self.input_shape[0],
-		                                                          head_gru_units))([y_ch2,y_ch2_state])
+        y_ch0 =\
+            tf.keras.layers.GRU(
+                second_gru_units,
+                input_shape=(None,
+                             self.input_shape[0],
+                             head_gru_units))([y_ch0,y_ch0_state])
+        y_ch1 =\
+            tf.keras.layers.GRU(
+                second_gru_units,
+                input_shape=(None,
+                             self.input_shape[0],
+                             head_gru_units))([y_ch1,y_ch1_state])
+        y_ch2 =\
+            tf.keras.layers.GRU(
+                second_gru_units,
+                input_shape=(None,
+                             self.input_shape[0],
+                             head_gru_units))([y_ch2,y_ch2_state])
 
-		y = tf.keras.layers.Concatenate(axis=1)([y_ch0,y_ch1,y_ch2])
+        y = tf.keras.layers.Concatenate(axis=1)([y_ch0,y_ch1,y_ch2])
 
-		gru_head_layer_dense_units = hp.Choice(name="gru_head_layer_dense_units",
-		                                       values=gru_head_layer_dense_units_options,
-		                                       ordered=True)
-		y = tf.keras.layers.BatchNormalization()(y)
-		y = tf.keras.layers.Dense(gru_head_layer_dense_units,
-		                        activation=tf.keras.activations.relu,
-		                        kernel_initializer=tf.keras.initializers.GlorotNormal)(y)
+        gru_head_layer_dense_units =\
+            hp.Choice(name="gru_head_layer_dense_units",
+                      values=gru_head_layer_dense_units_options,
+                      ordered=True)
+        y = tf.keras.layers.BatchNormalization()(y)
+        y = tf.keras.layers.Dense(
+                gru_head_layer_dense_units,
+                activation=tf.keras.activations.relu,
+                kernel_initializer=tf.keras.initializers.GlorotNormal)(y)
 
-		y_residual = y
+        y_residual = y
 		# for layer in gru_residual_block_layers:
 		
-		gru_residual_block_layers =\
+        gru_residual_block_layers =\
 		    hp.Choice(name="gru_residual_block_layers",
 		              values=gru_residual_block_layers_options,
 		              ordered=True)
 		
-		y = tf.keras.layers.BatchNormalization()(y)
-		y = tf.keras.layers.Dense(layer,
-		                        activation=tf.keras.activations.relu, 
-		                        kernel_initializer=tf.keras.initializers.GlorotNormal)(y)
-		y = tf.keras.layers.Concatenate(axis=1)([y,y_residual])
+        y = tf.keras.layers.BatchNormalization()(y)
+        y = tf.keras.layers.Dense(gru_residual_block_layers,
+		                          activation=tf.keras.activations.relu, 
+		                          kernel_initializer=
+                                    tf.keras.initializers.GlorotNormal)(y)
+        y = tf.keras.layers.Concatenate(axis=1)([y,y_residual])
 
-		final_base_model_output = tf.keras.layers.Concatenate(axis=1)([x,y])
+        final_base_model_output = tf.keras.layers.Concatenate(axis=1)([x,y])
 
-		concatenated_efficientnet_gru_model = tf.keras.Model(inputs=inp,outputs=final_base_model_output)
+        concatenated_efficientnet_gru_model =\
+            tf.keras.Model(inputs=inp,outputs=final_base_model_output)
 		
-		self.base_model = concatenated_efficientnet_gru_model
+        self.base_model = concatenated_efficientnet_gru_model
 		
-		final_model = self.build_auto_residual_mlp(hp)
+        final_model = self.build_auto_residual_mlp(hp)
 		
-		return final_model
+        return final_model
