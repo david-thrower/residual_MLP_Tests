@@ -50,8 +50,27 @@ HPARAMS = {
     'n_options_dropout_rate':5,
     'minimum_final_dense_layers':33,
     'maximum_final_dense_layers':300,
-    'n_options_final_dense_layers':7
+    'n_options_final_dense_layers':7,
+    'min_efficient_net_head_layer_dense_units':1,
+	'max_efficient_net_head_layer_dense_units':50,
+	'n_options_efficient_net_head_layer_dense_units':5,
+	'min_efficient_net_residual_block_layers':1,
+	'max_efficient_net_residual_block_layers':50,
+	'n_options_efficient_net_residual_block_layers':5,
+	'min_head_gru_units':5,
+	'max_head_gru_units':30,
+	'n_options_head_gru_units':3,
+	'min_second_gru_units':5,
+	'max_second_gru_units':30,
+	'n_options_second_gru_units':3,
+	'min_gru_head_layer_dense_units':1,
+	'max_gru_head_layer_dense_units':50,
+	'n_options_gru_head_layer_dense_units':5,
+	'min_gru_residual_block_layers':11,
+	'max_gru_residual_block_layers':50,
+	'n_options_gru_residual_block_layers':5
 }
+
 
 if __name__ == '__main__':
     

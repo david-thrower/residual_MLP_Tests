@@ -285,7 +285,8 @@ parser.add_argument(
 parser.add_argument(
     "--min_efficient_net_head_layer_dense_units", 
     type = int,
-    help="Minimum dense units for the first MLP layer after the effifientnet submodel.",
+    help="Minimum dense units for the first MLP layer after the "
+         "effifientnet submodel.",
     default=1)
 	
 
@@ -293,15 +294,15 @@ parser.add_argument(
 parser.add_argument(
     "--max_efficient_net_head_layer_dense_units", 
     type = int,
-    help="Maximum dense units for the first MLP layer after the effifientnet submodel.",
+    help="Maximum dense units for the first MLP layer after the effifientnet "
+         "submodel.",
     default=50)
-	
-
 	
 parser.add_argument(
     "--n_options_efficient_net_head_layer_dense_units", 
     type = int,
-    help="How many options for  the first MLP layer after the effifientnet submodel to try.",
+    help="How many options for  the first MLP layer after the effifientnet "
+         "submodel to try.",
     default=3)
 	
 
@@ -309,7 +310,8 @@ parser.add_argument(
 parser.add_argument(
     "--min_efficient_net_residual_block_layers", 
     type = int,
-    help="Minimum dense units for the residual Dense layer after the effifientnet submodel.",
+    help="Minimum dense units for the residual Dense layer after the "
+         "effifientnet submodel.",
     default=1)
 	
 
@@ -317,7 +319,8 @@ parser.add_argument(
 parser.add_argument(
     "--max_efficient_net_residual_block_layers", 
     type = int,
-    help="Maximum dense units for the residual Dense layer after the effifientnet submodel.",
+    help="Maximum dense units for the residual Dense layer after the "
+         "effifientnet submodel.",
     default=50)
 	
 
@@ -325,7 +328,8 @@ parser.add_argument(
 parser.add_argument(
     "--n_options_efficient_net_residual_block_layers", 
     type = int,
-    help="How many options for residual Dense layer after the effifientnet submodel to try.",
+    help="How many options for residual Dense layer after the effifientnet "
+         "submodel to try.",
     default=3)
 	
 
@@ -337,7 +341,6 @@ parser.add_argument(
     default=2)
 	
 
-	
 parser.add_argument(
     "--max_head_gru_units", 
     type = int,
@@ -381,7 +384,8 @@ parser.add_argument(
 parser.add_argument(
     "--min_gru_head_layer_dense_units", 
     type = int,
-    help="Minimum dense units for the first MLP layer after the GRU submodel.",
+    help="Minimum dense units for the first MLP layer after the GRU "
+         "submodel.",
     default=1)
 	
 
@@ -389,7 +393,8 @@ parser.add_argument(
 parser.add_argument(
     "--max_gru_head_layer_dense_units", 
     type = int,
-    help="Maximum dense units for the first MLP layer after the GRU submodel.",
+    help="Maximum dense units for the first MLP layer after the "
+         "GRU submodel.",
     default=50)
 	
 
@@ -397,7 +402,8 @@ parser.add_argument(
 parser.add_argument(
     "--n_options_gru_head_layer_dense_units", 
     type = int,
-    help="How many options for  the first MLP layer after the GRU submodel to try.",
+    help="How many options for  the first MLP layer after the GRU "
+         "submodel to try.",
     default=3)
 	
 
@@ -405,7 +411,8 @@ parser.add_argument(
 parser.add_argument(
     "--min_gru_residual_block_layers", 
     type = int,
-    help="Minimum dense units for the residual Dense layer after the GRU submodel.",
+    help="Minimum dense units for the residual Dense layer after the "
+         "GRU submodel.",
     default=1)
 	
 
@@ -413,7 +420,8 @@ parser.add_argument(
 parser.add_argument(
     "--max_gru_residual_block_layers", 
     type = int,
-    help="Maximum dense units for the residual Dense layer after the GRU submodel.",
+    help="Maximum dense units for the residual Dense layer after the GRU "
+         "submodel.",
     default=50)
 	
 
@@ -421,7 +429,8 @@ parser.add_argument(
 parser.add_argument(
     "--n_options_gru_residual_block_layers", 
     type = int,
-    help="How many options for residual Dense layer after the GRU submodel to try.",
+    help="How many options for residual Dense layer after the GRU "
+         "submodel to try.",
     default=3)
 
 
@@ -489,26 +498,44 @@ MINIMUM_FINAL_DENSE_LAYERS = hparams["minimum_final_dense_layers"]
 MAXIMUM_FINAL_DENSE_LAYERS = hparams["maximum_final_dense_layers"]
 N_OPTIONS_FINAL_DENSE_LAYERS = hparams["n_options_final_dense_layers"]
 
-# GRU-Concat-EfficientNetB7 base model args:
+# GRU-Concat-EfficientNetB7 base model kwargs:
 
-MIN_EFFICIENT_NET_HEAD_LAYER_DENSE_UNITS = hparams['min_efficient_net_head_layer_dense_units']
-MAX_EFFICIENT_NET_HEAD_LAYER_DENSE_UNITS = hparams['max_efficient_net_head_layer_dense_units']
-N_OPTIONS_EFFICIENT_NET_HEAD_LAYER_DENSE_UNITS = hparams['n_options_efficient_net_head_layer_dense_units']
-MIN_EFFICIENT_NET_RESIDUAL_BLOCK_LAYERS = hparams['min_efficient_net_residual_block_layers']
-MAX_EFFICIENT_NET_RESIDUAL_BLOCK_LAYERS = hparams['max_efficient_net_residual_block_layers']
-N_OPTIONS_EFFICIENT_NET_RESIDUAL_BLOCK_LAYERS = hparams['n_options_efficient_net_residual_block_layers']
-MIN_HEAD_GRU_UNITS = hparams['min_head_gru_units']
-MAX_HEAD_GRU_UNITS = hparams['max_head_gru_units']
-N_OPTIONS_HEAD_GRU_UNITS = hparams['n_options_head_gru_units']
-MIN_SECOND_GRU_UNITS = hparams['min_second_gru_units']
-MAX_SECOND_GRU_UNITS = hparams['max_second_gru_units']
-N_OPTIONS_SECOND_GRU_UNITS = hparams['n_options_second_gru_units']
-MIN_GRU_HEAD_LAYER_DENSE_UNITS = hparams['min_gru_head_layer_dense_units']
-MAX_GRU_HEAD_LAYER_DENSE_UNITS = hparams['max_gru_head_layer_dense_units']
-N_OPTIONS_GRU_HEAD_LAYER_DENSE_UNITS = hparams['n_options_gru_head_layer_dense_units']
-MIN_GRU_RESIDUAL_BLOCK_LAYERS = hparams['min_gru_residual_block_layers']
-MAX_GRU_RESIDUAL_BLOCK_LAYERS = hparams['max_gru_residual_block_layers']
-N_OPTIONS_GRU_RESIDUAL_BLOCK_LAYERS = hparams['n_options_gru_residual_block_layers']
+MIN_EFFICIENT_NET_HEAD_LAYER_DENSE_UNITS =\
+    hparams['min_efficient_net_head_layer_dense_units']
+MAX_EFFICIENT_NET_HEAD_LAYER_DENSE_UNITS =\
+    hparams['max_efficient_net_head_layer_dense_units']
+N_OPTIONS_EFFICIENT_NET_HEAD_LAYER_DENSE_UNITS =\
+    hparams['n_options_efficient_net_head_layer_dense_units']
+MIN_EFFICIENT_NET_RESIDUAL_BLOCK_LAYERS =\
+    hparams['min_efficient_net_residual_block_layers']
+MAX_EFFICIENT_NET_RESIDUAL_BLOCK_LAYERS =\
+    hparams['max_efficient_net_residual_block_layers']
+N_OPTIONS_EFFICIENT_NET_RESIDUAL_BLOCK_LAYERS =\
+    hparams['n_options_efficient_net_residual_block_layers']
+MIN_HEAD_GRU_UNITS =\
+    hparams['min_head_gru_units']
+MAX_HEAD_GRU_UNITS =\
+    hparams['max_head_gru_units']
+N_OPTIONS_HEAD_GRU_UNITS =\
+    hparams['n_options_head_gru_units']
+MIN_SECOND_GRU_UNITS =\
+    hparams['min_second_gru_units']
+MAX_SECOND_GRU_UNITS =\
+    hparams['max_second_gru_units']
+N_OPTIONS_SECOND_GRU_UNITS =\
+    hparams['n_options_second_gru_units']
+MIN_GRU_HEAD_LAYER_DENSE_UNITS =\
+    hparams['min_gru_head_layer_dense_units']
+MAX_GRU_HEAD_LAYER_DENSE_UNITS =\
+    hparams['max_gru_head_layer_dense_units']
+N_OPTIONS_GRU_HEAD_LAYER_DENSE_UNITS =\
+    hparams['n_options_gru_head_layer_dense_units']
+MIN_GRU_RESIDUAL_BLOCK_LAYERS =\
+    hparams['min_gru_residual_block_layers']
+MAX_GRU_RESIDUAL_BLOCK_LAYERS =\
+    hparams['max_gru_residual_block_layers']
+N_OPTIONS_GRU_RESIDUAL_BLOCK_LAYERS =\
+    hparams['n_options_gru_residual_block_layers']
 
 # CIFAR10_EfficientNetB7-ResidualMLP_NAS
 
@@ -565,14 +592,54 @@ print("MAXIMUM_INTER_BLOCK_LAYERS_PER_BLOCK = "
       f"{MAXIMUM_INTER_BLOCK_LAYERS_PER_BLOCK}")
 print("N_OPTIONS_INTER_BLOCK_LAYERS_PER_BLOCK = "
       f"{N_OPTIONS_INTER_BLOCK_LAYERS_PER_BLOCK}")
-print(f"MINIMUM_DROPOUT_RATE = {MINIMUM_DROPOUT_RATE}")
-print(f"MAXIMUM_DROPOUT_RATE = {MAXIMUM_DROPOUT_RATE}")
-print(f"N_OPTIONS_DROPOUT_RATE = {N_OPTIONS_DROPOUT_RATE}")
-print(f"MINIMUM_FINAL_DENSE_LAYERS = {MINIMUM_FINAL_DENSE_LAYERS}")
-print(f"MAXIMUM_FINAL_DENSE_LAYERS = {MAXIMUM_FINAL_DENSE_LAYERS}")
-print(f"N_OPTIONS_FINAL_DENSE_LAYERS = {N_OPTIONS_FINAL_DENSE_LAYERS}")
-
-# !!! Add the print statements for the base model kwargs
+print("MINIMUM_DROPOUT_RATE = "
+	  f"{MINIMUM_DROPOUT_RATE}")
+print("MAXIMUM_DROPOUT_RATE = "
+      f"{MAXIMUM_DROPOUT_RATE}")
+print("N_OPTIONS_DROPOUT_RATE = "
+      f"{N_OPTIONS_DROPOUT_RATE}")
+print("MINIMUM_FINAL_DENSE_LAYERS = "
+	  f"{MINIMUM_FINAL_DENSE_LAYERS}")
+print("MAXIMUM_FINAL_DENSE_LAYERS = "
+      f"{MAXIMUM_FINAL_DENSE_LAYERS}")
+print("N_OPTIONS_FINAL_DENSE_LAYERS = "
+      f"{N_OPTIONS_FINAL_DENSE_LAYERS}")
+print("MIN_EFFICIENT_NET_HEAD_LAYER_DENSE_UNITS = "
+      f"{MIN_EFFICIENT_NET_HEAD_LAYER_DENSE_UNITS}")
+print("MAX_EFFICIENT_NET_HEAD_LAYER_DENSE_UNITS = "
+      f"{MAX_EFFICIENT_NET_HEAD_LAYER_DENSE_UNITS}")
+print("N_OPTIONS_EFFICIENT_NET_HEAD_LAYER_DENSE_UNITS = "
+      f"{N_OPTIONS_EFFICIENT_NET_HEAD_LAYER_DENSE_UNITS}")
+print("MIN_EFFICIENT_NET_RESIDUAL_BLOCK_LAYERS = "
+      f"{MIN_EFFICIENT_NET_RESIDUAL_BLOCK_LAYERS}")
+print("MAX_EFFICIENT_NET_RESIDUAL_BLOCK_LAYERS = "
+      f"{MAX_EFFICIENT_NET_RESIDUAL_BLOCK_LAYERS}")
+print("N_OPTIONS_EFFICIENT_NET_RESIDUAL_BLOCK_LAYERS = "
+      f"{N_OPTIONS_EFFICIENT_NET_RESIDUAL_BLOCK_LAYERS}")
+print("MIN_HEAD_GRU_UNITS = "
+      f"{MIN_HEAD_GRU_UNITS}")
+print("MAX_HEAD_GRU_UNITS = "
+      f"{MAX_HEAD_GRU_UNITS}")
+print("N_OPTIONS_HEAD_GRU_UNITS = "
+      f"{N_OPTIONS_HEAD_GRU_UNITS}")
+print("MIN_SECOND_GRU_UNITS = "
+      f"{MIN_SECOND_GRU_UNITS}")
+print("MAX_SECOND_GRU_UNITS = "
+      f"{MAX_SECOND_GRU_UNITS}")
+print("N_OPTIONS_SECOND_GRU_UNITS = "
+      f"{N_OPTIONS_SECOND_GRU_UNITS}")
+print("MIN_GRU_HEAD_LAYER_DENSE_UNITS = "
+      f"{MIN_GRU_HEAD_LAYER_DENSE_UNITS}")
+print("MAX_GRU_HEAD_LAYER_DENSE_UNITS = "
+      f"{MAX_GRU_HEAD_LAYER_DENSE_UNITS}")
+print("N_OPTIONS_GRU_HEAD_LAYER_DENSE_UNITS = "
+      f"{N_OPTIONS_GRU_HEAD_LAYER_DENSE_UNITS}")
+print("MIN_GRU_RESIDUAL_BLOCK_LAYERS = "
+      f"{MIN_GRU_RESIDUAL_BLOCK_LAYERS}")
+print("MAX_GRU_RESIDUAL_BLOCK_LAYERS = "
+      f"{MAX_GRU_RESIDUAL_BLOCK_LAYERS}")
+print("N_OPTIONS_GRU_RESIDUAL_BLOCK_LAYERS = "
+      "{N_OPTIONS_GRU_RESIDUAL_BLOCK_LAYERS}")
 
 print("""
 
@@ -655,24 +722,40 @@ model_builder = ResidualMLP(
                         N_OPTIONS_FINAL_DENSE_LAYERS, 
                     number_of_classes = NUMBER_OF_CLASSES,
                     final_activation = tf.keras.activations.softmax,
-                    min_efficient_net_head_layer_dense_units = MIN_EFFICIENT_NET_HEAD_LAYER_DENSE_UNITS,
-					max_efficient_net_head_layer_dense_units = MAX_EFFICIENT_NET_HEAD_LAYER_DENSE_UNITS,
-					n_options_efficient_net_head_layer_dense_units = N_OPTIONS_EFFICIENT_NET_HEAD_LAYER_DENSE_UNITS,
-					min_efficient_net_residual_block_layers = MIN_EFFICIENT_NET_RESIDUAL_BLOCK_LAYERS,
-					max_efficient_net_residual_block_layers = MAX_EFFICIENT_NET_RESIDUAL_BLOCK_LAYERS,
-					n_options_efficient_net_residual_block_layers = N_OPTIONS_EFFICIENT_NET_RESIDUAL_BLOCK_LAYERS,
+                    min_efficient_net_head_layer_dense_units =\
+                    	MIN_EFFICIENT_NET_HEAD_LAYER_DENSE_UNITS,
+					max_efficient_net_head_layer_dense_units =\
+					    MAX_EFFICIENT_NET_HEAD_LAYER_DENSE_UNITS,
+					n_options_efficient_net_head_layer_dense_units =\
+					    N_OPTIONS_EFFICIENT_NET_HEAD_LAYER_DENSE_UNITS,
+					min_efficient_net_residual_block_layers =\
+					    MIN_EFFICIENT_NET_RESIDUAL_BLOCK_LAYERS,
+					max_efficient_net_residual_block_layers =\
+					    MAX_EFFICIENT_NET_RESIDUAL_BLOCK_LAYERS,
+					n_options_efficient_net_residual_block_layers =\
+					    N_OPTIONS_EFFICIENT_NET_RESIDUAL_BLOCK_LAYERS,
 					min_head_gru_units = MIN_HEAD_GRU_UNITS,
 					max_head_gru_units = MAX_HEAD_GRU_UNITS,
-					n_options_head_gru_units = N_OPTIONS_HEAD_GRU_UNITS,
-					min_second_gru_units = MIN_SECOND_GRU_UNITS,
-					max_second_gru_units = MAX_SECOND_GRU_UNITS,
-					n_options_second_gru_units = N_OPTIONS_SECOND_GRU_UNITS,
-					min_gru_head_layer_dense_units = MIN_GRU_HEAD_LAYER_DENSE_UNITS,
-					max_gru_head_layer_dense_units = MAX_GRU_HEAD_LAYER_DENSE_UNITS,
-					n_options_gru_head_layer_dense_units = N_OPTIONS_GRU_HEAD_LAYER_DENSE_UNITS,
-					min_gru_residual_block_layers = MIN_GRU_RESIDUAL_BLOCK_LAYERS,
-					max_gru_residual_block_layers = MAX_GRU_RESIDUAL_BLOCK_LAYERS,
-					n_options_gru_residual_block_layers = N_OPTIONS_GRU_RESIDUAL_BLOCK_LAYERS)
+					n_options_head_gru_units =\
+					    N_OPTIONS_HEAD_GRU_UNITS,
+					min_second_gru_units =\
+					    MIN_SECOND_GRU_UNITS,
+					max_second_gru_units =\
+					    MAX_SECOND_GRU_UNITS,
+					n_options_second_gru_units =\
+					    N_OPTIONS_SECOND_GRU_UNITS,
+					min_gru_head_layer_dense_units =\
+					    MIN_GRU_HEAD_LAYER_DENSE_UNITS,
+					max_gru_head_layer_dense_units =\
+					    MAX_GRU_HEAD_LAYER_DENSE_UNITS,
+					n_options_gru_head_layer_dense_units =\
+					    N_OPTIONS_GRU_HEAD_LAYER_DENSE_UNITS,
+					min_gru_residual_block_layers =\
+					    MIN_GRU_RESIDUAL_BLOCK_LAYERS,
+					max_gru_residual_block_layers =\
+					    MAX_GRU_RESIDUAL_BLOCK_LAYERS,
+					n_options_gru_residual_block_layers =\
+					    N_OPTIONS_GRU_RESIDUAL_BLOCK_LAYERS)
 
 
 logdir_for_search = os.path.join("logs", RESULTS_DIR_FOR_SEARCH + "_TB")
@@ -703,93 +786,25 @@ if __name__ == "__main__":
     
     
     
-    mod_with_fc_raw = tf.keras.applications.efficientnet.EfficientNetB7(
-        include_top=True, weights='imagenet', input_tensor=None,
-        input_shape = BASE_MODEL_INPUT_SHAPE, pooling='max', classes=1000
-    )
+    #mod_with_fc_raw = tf.keras.applications.efficientnet.EfficientNetB7(
+    #    include_top=True, weights='imagenet', input_tensor=None,
+    #    input_shape = BASE_MODEL_INPUT_SHAPE, pooling='max', classes=1000
+    #)
     
     # Make the deepest conv2d layer trainable, leave everything else
     # as not trainable
-    for layer in mod_with_fc_raw.layers:
-        layer.trainable = False
+    #for layer in mod_with_fc_raw.layers:
+    #    layer.trainable = False
     # Last conv2d layer. This we want to train .
-    mod_with_fc_raw.layers[-6].trainable = True
+    #mod_with_fc_raw.layers[-6].trainable = True
     
     # Create the final base model
     # (remove the final Dense and BatchNormalization layers ...) 
-    efficient_net_b_7_transferable_base_model =\
-        tf.keras.Model(inputs=mod_with_fc_raw.layers[0].input, 
-                        outputs=mod_with_fc_raw.layers[-3].output)
+    #efficient_net_b_7_transferable_base_model =\
+    #    tf.keras.Model(inputs=mod_with_fc_raw.layers[0].input, 
+    #                    outputs=mod_with_fc_raw.layers[-3].output)
     
-    model_builder = ResidualMLP(
-                        problem_type = PROBLEM_TYPE,
-                        minimum_learning_rate = MINIMUM_LEARNING_RATE, 
-                        maximum_learning_rate = MAXIMUM_LEARNING_RATE, 
-                        number_of_learning_rates_to_try =
-                            NUMBER_OF_LEARNING_RATES_TO_TRY, 
-                        input_shape = INPUT_SHAPE, 
-                        bw_images = False, 
-                        base_model = '', 
-                        base_model_input_shape = BASE_MODEL_INPUT_SHAPE, 
-                        flatten_after_base_model = False, 
-                        minimum_number_of_blocks = MINIMUM_NUMBER_OF_BLOCKS, 
-                        maximum_number_of_blocks = MAXIMUM_NUMBER_OF_BLOCKS, 
-                        minimum_number_of_layers_per_block =
-                            MINIMUM_NUMBER_OF_LAYERS_PER_BLOCK, 
-                        maximum_number_of_layers_per_block =
-                            MAXIMUM_NUMBER_OF_LAYERS_PER_BLOCK,
-                        minimum_neurons_per_block_layer =
-                            MINIMUM_NEURONS_PER_BLOCK_LAYER, 
-                        maximum_neurons_per_block_layer =
-                            MAXIMUM_NEURONS_PER_BLOCK_LAYER, 
-                        n_options_of_neurons_per_layer_to_try =
-                            N_OPTIONS_OF_NEURONS_PER_LAYER_TO_TRY, 
-                        minimum_neurons_per_block_layer_decay =
-                            MINIMUM_NEURONS_PER_BLOCK_LAYER_DECAY, 
-                        maximum_neurons_per_block_layer_decay = 
-                            MAXIMUM_NEURONS_PER_BLOCK_LAYER_DECAY, 
-                        minimum_dropout_rate_for_bypass_layers =
-                            MINIMUM_DROPOUT_RATE_FOR_BYPASS_LAYERS, 
-                        maximim_dropout_rate_for_bypass_layers =
-                            MAXIMIM_DROPOUT_RATE_FOR_BYPASS_LAYERS, 
-                        n_options_dropout_rate_for_bypass_layers =
-                            N_OPTIONS_DROPOUT_RATE_FOR_BYPASS_LAYERS,
-                        minimum_inter_block_layers_per_block =
-                            MINIMUM_INTER_BLOCK_LAYERS_PER_BLOCK, 
-                        maximum_inter_block_layers_per_block =
-                            MAXIMUM_INTER_BLOCK_LAYERS_PER_BLOCK,
-                        n_options_inter_block_layers_per_block =\
-                            N_OPTIONS_INTER_BLOCK_LAYERS_PER_BLOCK,
-                        minimum_dropout_rate = MINIMUM_DROPOUT_RATE, 
-                        maximum_dropout_rate = MAXIMUM_DROPOUT_RATE,
-                        n_options_dropout_rate = N_OPTIONS_DROPOUT_RATE, 
-                        minimum_final_dense_layers =
-                            MINIMUM_FINAL_DENSE_LAYERS,
-                        maximum_final_dense_layers =
-                            MAXIMUM_FINAL_DENSE_LAYERS, 
-                        n_options_final_dense_layers =
-                            N_OPTIONS_FINAL_DENSE_LAYERS, 
-                        number_of_classes = NUMBER_OF_CLASSES,
-                        final_activation = tf.keras.activations.softmax,
-		                min_efficient_net_head_layer_dense_units = MIN_EFFICIENT_NET_HEAD_LAYER_DENSE_UNITS,
-						max_efficient_net_head_layer_dense_units = MAX_EFFICIENT_NET_HEAD_LAYER_DENSE_UNITS,
-						n_options_efficient_net_head_layer_dense_units = N_OPTIONS_EFFICIENT_NET_HEAD_LAYER_DENSE_UNITS,
-						min_efficient_net_residual_block_layers = MIN_EFFICIENT_NET_RESIDUAL_BLOCK_LAYERS,
-						max_efficient_net_residual_block_layers = MAX_EFFICIENT_NET_RESIDUAL_BLOCK_LAYERS,
-						n_options_efficient_net_residual_block_layers = N_OPTIONS_EFFICIENT_NET_RESIDUAL_BLOCK_LAYERS,
-						min_head_gru_units = MIN_HEAD_GRU_UNITS,
-						max_head_gru_units = MAX_HEAD_GRU_UNITS,
-						n_options_head_gru_units = N_OPTIONS_HEAD_GRU_UNITS,
-						min_second_gru_units = MIN_SECOND_GRU_UNITS,
-						max_second_gru_units = MAX_SECOND_GRU_UNITS,
-						n_options_second_gru_units = N_OPTIONS_SECOND_GRU_UNITS,
-						min_gru_head_layer_dense_units = MIN_GRU_HEAD_LAYER_DENSE_UNITS,
-						max_gru_head_layer_dense_units = MAX_GRU_HEAD_LAYER_DENSE_UNITS,
-						n_options_gru_head_layer_dense_units = N_OPTIONS_GRU_HEAD_LAYER_DENSE_UNITS,
-						min_gru_residual_block_layers = MIN_GRU_RESIDUAL_BLOCK_LAYERS,
-						max_gru_residual_block_layers = MAX_GRU_RESIDUAL_BLOCK_LAYERS,
-						n_options_gru_residual_block_layers = N_OPTIONS_GRU_RESIDUAL_BLOCK_LAYERS)
-    
+
     
     
     logdir_for_search = os.path.join("logs", RESULTS_DIR_FOR_SEARCH + "_TB")
@@ -797,13 +812,97 @@ if __name__ == "__main__":
         tf.keras.callbacks.TensorBoard(logdir_for_search, histogram_freq=1)
     
     tuner = kt.Hyperband(
-        model_builder.make_gru_concat_efficientnetb7_residualmlp_model,
+        hypermodel = ResidualMLP(
+                          problem_type = PROBLEM_TYPE,
+                          minimum_learning_rate = MINIMUM_LEARNING_RATE, 
+                          maximum_learning_rate = MAXIMUM_LEARNING_RATE, 
+                          number_of_learning_rates_to_try =
+                              NUMBER_OF_LEARNING_RATES_TO_TRY, 
+                          input_shape = INPUT_SHAPE, 
+                          bw_images = False, 
+                          base_model = '', 
+                          base_model_input_shape = BASE_MODEL_INPUT_SHAPE,
+                          flatten_after_base_model = False, 
+                          minimum_number_of_blocks = MINIMUM_NUMBER_OF_BLOCKS, 
+                          maximum_number_of_blocks = MAXIMUM_NUMBER_OF_BLOCKS, 
+                          minimum_number_of_layers_per_block =
+                              MINIMUM_NUMBER_OF_LAYERS_PER_BLOCK, 
+                          maximum_number_of_layers_per_block =
+                              MAXIMUM_NUMBER_OF_LAYERS_PER_BLOCK,
+                          minimum_neurons_per_block_layer =
+                              MINIMUM_NEURONS_PER_BLOCK_LAYER, 
+                          maximum_neurons_per_block_layer =
+                              MAXIMUM_NEURONS_PER_BLOCK_LAYER, 
+                          n_options_of_neurons_per_layer_to_try =
+                              N_OPTIONS_OF_NEURONS_PER_LAYER_TO_TRY, 
+                          minimum_neurons_per_block_layer_decay =
+                              MINIMUM_NEURONS_PER_BLOCK_LAYER_DECAY, 
+                          maximum_neurons_per_block_layer_decay = 
+                              MAXIMUM_NEURONS_PER_BLOCK_LAYER_DECAY, 
+                          minimum_dropout_rate_for_bypass_layers =
+                              MINIMUM_DROPOUT_RATE_FOR_BYPASS_LAYERS, 
+                          maximim_dropout_rate_for_bypass_layers =
+                              MAXIMIM_DROPOUT_RATE_FOR_BYPASS_LAYERS, 
+                          n_options_dropout_rate_for_bypass_layers =
+                              N_OPTIONS_DROPOUT_RATE_FOR_BYPASS_LAYERS,
+                          minimum_inter_block_layers_per_block =
+                              MINIMUM_INTER_BLOCK_LAYERS_PER_BLOCK, 
+                          maximum_inter_block_layers_per_block =
+                              MAXIMUM_INTER_BLOCK_LAYERS_PER_BLOCK,
+                          n_options_inter_block_layers_per_block =\
+                              N_OPTIONS_INTER_BLOCK_LAYERS_PER_BLOCK,
+                          minimum_dropout_rate = MINIMUM_DROPOUT_RATE, 
+                          maximum_dropout_rate = MAXIMUM_DROPOUT_RATE,
+                          n_options_dropout_rate = N_OPTIONS_DROPOUT_RATE, 
+                          minimum_final_dense_layers =
+                              MINIMUM_FINAL_DENSE_LAYERS,
+                          maximum_final_dense_layers =
+                              MAXIMUM_FINAL_DENSE_LAYERS, 
+                          n_options_final_dense_layers =
+                              N_OPTIONS_FINAL_DENSE_LAYERS, 
+                          number_of_classes = NUMBER_OF_CLASSES,
+                          final_activation = tf.keras.activations.softmax,
+  		                min_efficient_net_head_layer_dense_units =\
+  		                    MIN_EFFICIENT_NET_HEAD_LAYER_DENSE_UNITS,
+  						max_efficient_net_head_layer_dense_units =\
+  						    MAX_EFFICIENT_NET_HEAD_LAYER_DENSE_UNITS,
+  						n_options_efficient_net_head_layer_dense_units =\
+  						    N_OPTIONS_EFFICIENT_NET_HEAD_LAYER_DENSE_UNITS,
+  						min_efficient_net_residual_block_layers =\
+  						    MIN_EFFICIENT_NET_RESIDUAL_BLOCK_LAYERS,
+  						max_efficient_net_residual_block_layers =\
+  						    MAX_EFFICIENT_NET_RESIDUAL_BLOCK_LAYERS,
+  						n_options_efficient_net_residual_block_layers =\
+  						    N_OPTIONS_EFFICIENT_NET_RESIDUAL_BLOCK_LAYERS,
+  						min_head_gru_units = MIN_HEAD_GRU_UNITS,
+  						max_head_gru_units = MAX_HEAD_GRU_UNITS,
+  						n_options_head_gru_units =\
+  						    N_OPTIONS_HEAD_GRU_UNITS,
+  						min_second_gru_units = MIN_SECOND_GRU_UNITS,
+  						max_second_gru_units = MAX_SECOND_GRU_UNITS,
+  						n_options_second_gru_units =\
+  						    N_OPTIONS_SECOND_GRU_UNITS,
+  						min_gru_head_layer_dense_units =\
+  						    MIN_GRU_HEAD_LAYER_DENSE_UNITS,
+  						max_gru_head_layer_dense_units =\
+  						    MAX_GRU_HEAD_LAYER_DENSE_UNITS,
+  						n_options_gru_head_layer_dense_units =\
+  						    N_OPTIONS_GRU_HEAD_LAYER_DENSE_UNITS,
+  						min_gru_residual_block_layers =\
+  						    MIN_GRU_RESIDUAL_BLOCK_LAYERS,
+  						max_gru_residual_block_layers =\
+  						    MAX_GRU_RESIDUAL_BLOCK_LAYERS,
+  						n_options_gru_residual_block_layers =\
+  						    N_OPTIONS_GRU_RESIDUAL_BLOCK_LAYERS).\
+            make_gru_concat_efficientnetb7_residualmlp_model,
         objective='val_loss',
         project_name = PROJECT_NAME,
         max_epochs = MAX_EPOCHS,
         hyperband_iterations = 3)
     
-    
+    strategy = tf.distribute.MirroredStrategy(
+                                          devices=None,
+                                          cross_device_ops=None)
     tuner.search(x=selected_x_train,  
                  y=selected_y_train_ohe,
                  epochs=MAX_EPOCHS,
