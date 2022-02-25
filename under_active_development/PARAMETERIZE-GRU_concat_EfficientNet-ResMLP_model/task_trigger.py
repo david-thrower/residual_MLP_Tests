@@ -19,13 +19,13 @@ TIME_STAMP = pendulum.now().\
                     	replace(':','-')[:16]
 
 HPARAMS = {
-    'project_name':"2022-02-25_CIFAR10_GRU_Concat_EfficientNetB7-ResidualMLP_NAS_attempt",
+    'project_name':"2022-02-25_01-45_CIFAR10_GRU_Concat_EfficientNetB7-ResidualMLP_NAS_attempt",
     'problem_type':"classification",
     'number_of_classes':10,
     'training_set_size':50000,
     'patience':5,
     'patience_min_delta':0.00001,
-    'batch_size':20,
+    'batch_size':5,
     'max_epochs':150,
     'minimum_learning_rate':0.0001,
     'maximum_learning_rate':0.02,
@@ -52,29 +52,29 @@ HPARAMS = {
     'maximum_final_dense_layers':175,
     'n_options_final_dense_layers':7,
     'min_efficient_net_head_layer_dense_units':5,
-	'max_efficient_net_head_layer_dense_units':50,
-	'n_options_efficient_net_head_layer_dense_units':5,
-	'min_efficient_net_residual_block_layers':5,
-	'max_efficient_net_residual_block_layers':50,
-	'n_options_efficient_net_residual_block_layers':5,
-	'min_head_gru_units':3,
-	'max_head_gru_units':30,
-	'n_options_head_gru_units':3,
-	'min_second_gru_units':3,
-	'max_second_gru_units':30,
-	'n_options_second_gru_units':3,
-	'min_gru_head_layer_dense_units':5,
-	'max_gru_head_layer_dense_units':50,
-	'n_options_gru_head_layer_dense_units':5,
-	'min_gru_residual_block_layers':5,
-	'max_gru_residual_block_layers':50,
-	'n_options_gru_residual_block_layers':5
+    'max_efficient_net_head_layer_dense_units':50,
+    'n_options_efficient_net_head_layer_dense_units':5,
+    'min_efficient_net_residual_block_layers':5,
+    'max_efficient_net_residual_block_layers':50,
+    'n_options_efficient_net_residual_block_layers':5,
+    'min_head_gru_units':3,
+    'max_head_gru_units':30,
+    'n_options_head_gru_units':3,
+    'min_second_gru_units':3,
+    'max_second_gru_units':30,
+    'n_options_second_gru_units':3,
+    'min_gru_head_layer_dense_units':5,
+    'max_gru_head_layer_dense_units':50,
+    'n_options_gru_head_layer_dense_units':5,
+    'min_gru_residual_block_layers':5,
+    'max_gru_residual_block_layers':50,
+    'n_options_gru_residual_block_layers':5
 }
 
 
 if __name__ == '__main__':
-    
-    BASE_FILE_NAME = f"{TIME_STAMP}_CIFAR10_EfficientNetB7-ResidualMLP_NAS_SECOND_PASS_SEARCH"
+
+    BASE_FILE_NAME = f"{TIME_STAMP}_{HPARAMS['project_name']}"
     SHELL_LOGS_FILE_NAME = f"{BASE_FILE_NAME}_python3_shell_log.txt"
     SHELL_SCRIPT_NAME = f"{BASE_FILE_NAME}_task_trigger.sh"
     

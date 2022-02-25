@@ -457,7 +457,7 @@ RESULTS_DIR_FOR_SEARCH =\
 
 # Base model args
 
-BASE_MODEL_INPUT_SHAPE = (600,600,3)
+BASE_MODEL_INPUT_SHAPE = (32,32,3)
 
 # ResidualMLP model args
 
@@ -819,7 +819,7 @@ if __name__ == "__main__":
                           number_of_learning_rates_to_try =
                               NUMBER_OF_LEARNING_RATES_TO_TRY, 
                           input_shape = INPUT_SHAPE, 
-                          bw_images = False, 
+                          bw_images = False,
                           base_model = '', 
                           base_model_input_shape = BASE_MODEL_INPUT_SHAPE,
                           flatten_after_base_model = False, 
